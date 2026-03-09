@@ -193,7 +193,7 @@ ADEPT.HUD.prototype.renderTitle = function(ctx) {
     ctx.fillRect(cx - 70, 108, 140, 1);
 
     // Tagline
-    this.drawTextCentered(ctx, 'OUTSMART THE INVADER', 118, '#607890', 5);
+    this.drawTextCentered(ctx, 'OUTSMART THE CROWN OF THORNS', 118, '#607890', 5);
 
     // Animated cuttlefish swimming across the screen
     var fishPhase = t * 0.4;
@@ -304,12 +304,12 @@ ADEPT.HUD.prototype.renderStageSelect = function(ctx, game) {
     this.drawTextCentered(ctx, 'SELECT STAGE', 70, '#808890', 5);
 
     this.drawTextCentered(ctx, '[1] STAGE I', 96, '#40e0c0', 7);
-    this.drawTextCentered(ctx, 'Single tumor', 114, '#606080', 5);
+    this.drawTextCentered(ctx, 'Single crown of thorns', 114, '#606080', 5);
 
     var unlocked = game.isStageUnlocked(game.currentModeIndex, 4);
     if (unlocked) {
         this.drawTextCentered(ctx, '[2] STAGE IV', 136, '#e040c0', 7);
-        this.drawTextCentered(ctx, 'Metastatic - tumor spreads!', 154, '#606080', 5);
+        this.drawTextCentered(ctx, 'Metastatic - it spreads!', 154, '#606080', 5);
     } else {
         this.drawTextCentered(ctx, '[2] STAGE IV', 136, '#403040', 7);
         this.drawTextCentered(ctx, 'Beat Stage I to unlock', 154, '#403040', 5);
@@ -412,7 +412,7 @@ ADEPT.HUD.prototype.renderResults = function(ctx, game) {
     var y = 58;
     var tumorLabel = result.tumorKilled ? 'YES' : 'NO';
     var tumorColor = result.tumorKilled ? '#40e040' : '#e04040';
-    this.drawText(ctx, 'TUMOR KILLED:', 30, y, '#c0c0c0', 5);
+    this.drawText(ctx, 'COT KILLED:', 30, y, '#c0c0c0', 5);
     this.drawText(ctx, tumorLabel, 150, y, tumorColor, 5);
     this.drawText(ctx, '+' + result.tumorScore, 190, y, '#f0e040', 5);
 
@@ -451,7 +451,7 @@ ADEPT.HUD.prototype.renderResults = function(ctx, game) {
     if (result.stars === 3) {
         this.drawTextCentered(ctx, 'PERFECT!', y, '#f0e040', 5);
     } else if (result.stars === 0 && !result.tumorKilled) {
-        this.drawTextCentered(ctx, 'TUMOR SURVIVED...', y, '#e04040', 5);
+        this.drawTextCentered(ctx, 'CROWN OF THORNS SURVIVED...', y, '#e04040', 5);
     }
 
     y += 16;

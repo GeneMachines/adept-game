@@ -3,7 +3,7 @@ window.ADEPT = window.ADEPT || {};
 ADEPT.ModeADC = function(stage) {
     ADEPT.ModeBase.call(this, {
         name: 'ADC',
-        description: 'Antibody-Drug Conjugates diffuse through the tank like chemo, but they stick preferentially to the tumor. Once bound, they slowly leak their toxic payload. Better targeting, but not perfect.',
+        description: 'Antibody-Drug Conjugates diffuse through the tank like chemo, but they stick preferentially to the crown of thorns. Once bound, they slowly leak their toxic payload. Better targeting, but not perfect.',
         maxMolecules: 15,
         cuttlefishCount: 5,
         tumorHp: 100,

@@ -3,7 +3,7 @@ window.ADEPT = window.ADEPT || {};
 ADEPT.ModeChemo = function(stage) {
     ADEPT.ModeBase.call(this, {
         name: 'SYSTEMIC CHEMO',
-        description: 'Release chemotherapy into the tank. It kills everything it touches - tumor AND cuttlefish. Hold SPACE to charge dose, release to deploy. Good luck.',
+        description: 'Release chemotherapy into the tank. It kills everything it touches - crown of thorns AND cuttlefish. Hold SPACE to charge dose, release to deploy. Good luck.',
         maxMolecules: 60,
         cuttlefishCount: 5,
         tumorHp: 80,
