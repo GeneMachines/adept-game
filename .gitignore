@@ -1,0 +1,12 @@
+# Source images (large originals, not needed for game)
+Cuttlefish600x600.png
+assets/crownofthorns.jpg
+assets/cuttlefish-cropped.png
+assets/Screenshot*.png
+
+# Claude Code
+.claude/
+
+# OS files
+.DS_Store
+Thumbs.db

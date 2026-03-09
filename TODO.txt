@@ -1,0 +1,26 @@
+ADEPT GAME - TODO
+==================
+
+[ ] BIOLOGIC PARAMETER TUNING
+    - Tweak chemo/ADC/ADEPT parameters to roughly match real biologic values
+    - Clearance half-lives, binding affinities, DAR, payload potency
+    - Relative dose equivalences grounded in real PK data
+
+[ ] TUMOR METASTASIS
+    - Tumor metastasises over time (spawns smaller secondary tumors)
+    - Adds urgency/pressure to treat quickly
+    - Secondary tumors could be smaller, lower HP, spread from original
+
+[ ] SCORING & HIGH SCORES
+    - Scoring metric based on therapeutic index (ratio of tumor kill to healthy cuttlefish damage)
+    - Track and display high scores per mode
+    - Persist high scores (localStorage)
+    - Show therapeutic index breakdown on results screen
+
+[ ] PLAYER PARAMETER CUSTOMIZATION
+    - Let players alter drug parameters before/during a run
+    - ADC: DAR, linker stability, antibody affinity
+    - Clearance rates, payload toxicity
+    - ADEPT: enzyme catalytic efficiency, prodrug activation rate
+    - Could be a "lab bench" screen before each mode
+    - Educational: lets players discover why certain parameters matter
