@@ -25,8 +25,8 @@ ADEPT.ADC.prototype.render = function(ctx) {
     var py = Math.round(this.y);
 
     // Y-shape antibody with payload indicator
-    var col = this.bound ? '#30a030' : '#40e040';
-    var payloadCol = this.payloadRemaining > 2 ? '#ff6040' : '#ff9060';
+    var col = this.bound ? '#2090a0' : '#40c0e0';
+    var payloadCol = this.payloadRemaining > 2 ? '#ff4040' : '#ff6060';
 
     // Stem
     ctx.fillStyle = col;
@@ -50,7 +50,7 @@ ADEPT.ADC.prototype.render = function(ctx) {
 
     // Glow if leaking
     if (this.payloadRemaining > 0.5) {
-        ctx.fillStyle = 'rgba(255, 96, 64, 0.1)';
+        ctx.fillStyle = 'rgba(255, 64, 64, 0.12)';
         ctx.fillRect(px - 3, py - 1, 7, 7);
     }
 };

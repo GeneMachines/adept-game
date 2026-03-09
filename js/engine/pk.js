@@ -34,9 +34,9 @@ ADEPT.PK = {
         var halfLife = ADEPT.PK.HALF_LIFE[key];
         if (!halfLife) return;
 
-        // Accelerate clearance after tumor is dead so the round ends faster
+        // Accelerate clearance after ALL tumors are dead so the round ends faster
         var gi = ADEPT.gameInstance;
-        if (gi && gi.tumor && !gi.tumor.alive) {
+        if (gi && gi.allTumorsDead()) {
             halfLife = halfLife / 8;
         }
 

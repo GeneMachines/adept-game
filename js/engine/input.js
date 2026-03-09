@@ -10,6 +10,7 @@ ADEPT.Input = function(canvas) {
     this.phase2Triggered = false;
     this.anyKey = false;
     this.selectedOption = -1;
+    this.escPressed = false;
 
     var self = this;
 
@@ -27,7 +28,8 @@ ADEPT.Input = function(canvas) {
         if (e.code === 'Digit3' || e.code === 'Numpad3') self.selectedOption = 2;
         if (e.code === 'KeyR') self.selectedOption = 10; // retry
         if (e.code === 'KeyN') self.selectedOption = 11; // next
-        if (e.code === 'KeyM' || e.code === 'Escape') self.selectedOption = 12; // menu
+        if (e.code === 'KeyM') self.selectedOption = 12; // menu
+        if (e.code === 'Escape') { self.escPressed = true; self.selectedOption = 12; }
         self.anyKey = true;
     });
 
@@ -85,6 +87,12 @@ ADEPT.Input.prototype.consumeCharge = function() {
 ADEPT.Input.prototype.consumePhase2 = function() {
     var val = this.phase2Triggered;
     this.phase2Triggered = false;
+    return val;
+};
+
+ADEPT.Input.prototype.consumeEsc = function() {
+    var val = this.escPressed;
+    this.escPressed = false;
     return val;
 };
 

@@ -86,6 +86,50 @@ ADEPT.Particles = {
                     });
                 }
                 break;
+            case 'met_charge':
+                // Converging sparkle particles moving inward toward eye
+                for (var i = 0; i < 3; i++) {
+                    var ca = (i / 3) * Math.PI * 2 + Math.random() * 0.5;
+                    var cd = 12 + Math.random() * 8;
+                    ADEPT.Particles.particles.push({
+                        x: x + Math.cos(ca) * cd,
+                        y: y + Math.sin(ca) * cd,
+                        vx: -Math.cos(ca) * cd / 0.4,
+                        vy: -Math.sin(ca) * cd / 0.4,
+                        life: 0.4,
+                        maxLife: 0.4,
+                        color: '#e040c0',
+                        size: 1,
+                        type: 'fade',
+                    });
+                }
+                break;
+            case 'met_impact':
+                // Radial burst at metastasis spawn point
+                for (var i = 0; i < 10; i++) {
+                    var ia = (i / 10) * Math.PI * 2;
+                    ADEPT.Particles.particles.push({
+                        x: x, y: y,
+                        vx: Math.cos(ia) * 25,
+                        vy: Math.sin(ia) * 25,
+                        life: 0.5,
+                        maxLife: 0.5,
+                        color: '#e040c0',
+                        size: 2,
+                        type: 'fade',
+                    });
+                }
+                // Central white flash
+                ADEPT.Particles.particles.push({
+                    x: x, y: y,
+                    vx: 0, vy: 0,
+                    life: 0.3,
+                    maxLife: 0.3,
+                    color: '#ffffff',
+                    size: 6,
+                    type: 'flash',
+                });
+                break;
         }
     },
 

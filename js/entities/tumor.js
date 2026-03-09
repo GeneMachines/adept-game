@@ -1,27 +1,29 @@
 window.ADEPT = window.ADEPT || {};
 
-ADEPT.Tumor = function(x, y) {
+ADEPT.Tumor = function(x, y, config) {
     ADEPT.Entity.call(this, x, y);
+    config = config || {};
     this.type = 'tumor';
-    this.radius = 18;
+    this.radius = config.radius || 18;
     this.layer = 1;
-    this.hp = 100;
-    this.maxHp = 100;
+    this.hp = config.hp || 100;
+    this.maxHp = this.hp;
     this.diffuses = false;
     this.boundMolecules = [];
     this.damageFlash = 0;
-    this.pulseTimer = 0;
+    this.pulseTimer = Math.random() * 10; // randomize phase so mets pulse differently
+    this.isMetastasis = config.isMetastasis || false;
 
-    // Swimming AI (slow drift)
+    // Swimming AI (slow drift — mets are faster/jitterier)
     this.wanderX = x;
     this.wanderY = y;
     this.wanderTimer = 0;
     this.wanderInterval = 4 + Math.random() * 4;
-    this.swimSpeed = 3;
+    this.swimSpeed = this.isMetastasis ? 5 : 3;
 
     // Generate irregular surface points for collision
     this.surfacePoints = [];
-    var numPoints = 20;
+    var numPoints = this.isMetastasis ? 12 : 20;
     for (var i = 0; i < numPoints; i++) {
         var angle = (i / numPoints) * Math.PI * 2;
         var r = this.radius * (0.75 + Math.random() * 0.25);
@@ -33,12 +35,17 @@ ADEPT.Tumor = function(x, y) {
         });
     }
 
+    // Metastasis beam state machine (primary only)
+    this.metBeam = null; // {phase, timer, targetX, targetY, progress}
+    this.metCount = 0;
+
     // Generate some vein paths for rendering
     this.veins = [];
-    for (var v = 0; v < 5; v++) {
+    var numVeins = this.isMetastasis ? 2 : 5;
+    for (var v = 0; v < numVeins; v++) {
         var vein = [];
         var a = Math.random() * Math.PI * 2;
-        var len = 4 + Math.random() * 8;
+        var len = this.isMetastasis ? (2 + Math.random() * 4) : (4 + Math.random() * 8);
         for (var s = 0; s < len; s++) {
             a += (Math.random() - 0.5) * 0.8;
             vein.push({
@@ -84,11 +91,57 @@ ADEPT.Tumor.prototype.removeBoundMolecule = function(mol) {
     if (idx >= 0) this.boundMolecules.splice(idx, 1);
 };
 
+ADEPT.Tumor.prototype.startMetBeam = function(targetX, targetY) {
+    this.metBeam = {
+        phase: 'charge',  // charge → beam → impact → done
+        timer: 0,
+        targetX: targetX,
+        targetY: targetY,
+        progress: 0,       // 0-1 beam extension
+        chargeDuration: 0.5,
+        beamDuration: 0.3,
+        impactDuration: 0.2,
+        chargeSpawnTimer: 0,
+    };
+};
+
 ADEPT.Tumor.prototype.update = function(dt) {
     this.pulseTimer += dt;
     if (this.damageFlash > 0) this.damageFlash -= dt;
     if (this.hp <= 0 && this.alive) {
         this.alive = false;
+        if (this.isMetastasis && ADEPT.Particles) {
+            ADEPT.Particles.spawn('death', this.x, this.y);
+        }
+    }
+
+    // Tick metastasis beam
+    if (this.metBeam && this.alive) {
+        var b = this.metBeam;
+        b.timer += dt;
+        if (b.phase === 'charge') {
+            // Spawn converging particles toward eye
+            b.chargeSpawnTimer += dt;
+            if (b.chargeSpawnTimer > 0.12) {
+                b.chargeSpawnTimer = 0;
+                ADEPT.Particles.spawn('met_charge', this.x, this.y);
+            }
+            if (b.timer >= b.chargeDuration) {
+                b.phase = 'beam';
+                b.timer = 0;
+            }
+        } else if (b.phase === 'beam') {
+            b.progress = Math.min(1, b.timer / b.beamDuration);
+            if (b.timer >= b.beamDuration) {
+                b.phase = 'impact';
+                b.timer = 0;
+                ADEPT.Particles.spawn('met_impact', b.targetX, b.targetY);
+            }
+        } else if (b.phase === 'impact') {
+            if (b.timer >= b.impactDuration) {
+                b.phase = 'done';
+            }
+        }
     }
 
     // Slow wander
@@ -126,19 +179,26 @@ ADEPT.Tumor.prototype.render = function(ctx) {
     var sprite = ADEPT.Sprites ? ADEPT.Sprites.get('tumor') : null;
 
     if (!sprite || !sprite.complete) {
-        // Fallback: simple circle
+        // Fallback: simple rectangle
+        var fallbackR = this.isMetastasis ? 5 : 8;
         ctx.fillStyle = flash ? '#a04060' : '#5a2a4a';
-        ctx.fillRect(px - 8, py - 8, 16, 16);
+        ctx.fillRect(px - fallbackR, py - fallbackR, fallbackR * 2, fallbackR * 2);
         return;
     }
 
     var sw = sprite.width;
     var sh = sprite.height;
+
+    // Scale factor for metastases (draw sprite smaller)
+    var scale = this.isMetastasis ? 0.5 : 1.0;
+    var drawW = Math.round(sw * scale);
+    var drawH = Math.round(sh * scale);
+
     // Buffer must fit sprite at any rotation — use diagonal
-    var diag = Math.ceil(Math.sqrt(sw * sw + sh * sh)) + 2;
+    var diag = Math.ceil(Math.sqrt(drawW * drawW + drawH * drawH)) + 2;
 
     // Offscreen buffer for rotation + tint effects
-    if (!this._tintBuffer) {
+    if (!this._tintBuffer || this._tintBuffer.width !== diag) {
         this._tintBuffer = document.createElement('canvas');
     }
     var buf = this._tintBuffer;
@@ -146,12 +206,13 @@ ADEPT.Tumor.prototype.render = function(ctx) {
     buf.height = diag;
     var bc = buf.getContext('2d');
     bc.clearRect(0, 0, diag, diag);
+    bc.imageSmoothingEnabled = false;
 
-    // Slow rotation based on pulseTimer
+    // Slow rotation based on pulseTimer (mets spin a bit faster)
     bc.save();
     bc.translate(diag / 2, diag / 2);
-    bc.rotate(this.pulseTimer * 0.15);
-    bc.drawImage(sprite, -Math.floor(sw / 2), -Math.floor(sh / 2));
+    bc.rotate(this.pulseTimer * (this.isMetastasis ? 0.25 : 0.15));
+    bc.drawImage(sprite, -Math.floor(drawW / 2), -Math.floor(drawH / 2), drawW, drawH);
     bc.restore();
 
     // Damage flash tint
@@ -170,13 +231,71 @@ ADEPT.Tumor.prototype.render = function(ctx) {
 
     ctx.drawImage(buf, px - Math.floor(diag / 2), py - Math.floor(diag / 2));
 
+    // Metastasis beam rendering
+    if (this.metBeam && this.alive) {
+        var b = this.metBeam;
+        if (b.phase === 'charge') {
+            // Glowing pixel cluster at eye center with increasing intensity
+            var intensity = b.timer / b.chargeDuration;
+            ctx.fillStyle = 'rgba(224, 64, 192, ' + (intensity * 0.6) + ')';
+            ctx.fillRect(px - 1, py - 1, 3, 3);
+            ctx.fillStyle = 'rgba(255, 255, 255, ' + (intensity * 0.4) + ')';
+            ctx.fillRect(px, py, 1, 1);
+        } else if (b.phase === 'beam') {
+            // Pixel laser extending from center toward target
+            var dx = b.targetX - this.x;
+            var dy = b.targetY - this.y;
+            var len = Math.sqrt(dx * dx + dy * dy);
+            var steps = Math.floor(len * b.progress);
+            var nx = dx / len;
+            var ny = dy / len;
+            // Glow layer (wider, dimmer)
+            ctx.fillStyle = 'rgba(224, 64, 192, 0.3)';
+            for (var s = 0; s < steps; s += 2) {
+                var bx = Math.round(this.x + nx * s);
+                var by = Math.round(this.y + ny * s);
+                ctx.fillRect(bx - 1, by - 1, 3, 3);
+            }
+            // Core beam (magenta)
+            ctx.fillStyle = '#e040c0';
+            for (var s = 0; s < steps; s++) {
+                var bx = Math.round(this.x + nx * s);
+                var by = Math.round(this.y + ny * s);
+                ctx.fillRect(bx, by, 1, 1);
+            }
+            // White tip
+            if (steps > 0) {
+                var tipX = Math.round(this.x + nx * steps);
+                var tipY = Math.round(this.y + ny * steps);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(tipX, tipY, 1, 1);
+            }
+        } else if (b.phase === 'impact') {
+            // Full beam fading out
+            var fade = 1 - (b.timer / b.impactDuration);
+            var dx = b.targetX - this.x;
+            var dy = b.targetY - this.y;
+            var len = Math.sqrt(dx * dx + dy * dy);
+            var nx = dx / len;
+            var ny = dy / len;
+            ctx.globalAlpha = fade;
+            ctx.fillStyle = '#e040c0';
+            for (var s = 0; s < len; s += 2) {
+                var bx = Math.round(this.x + nx * s);
+                var by = Math.round(this.y + ny * s);
+                ctx.fillRect(bx, by, 1, 1);
+            }
+            ctx.globalAlpha = 1.0;
+        }
+    }
+
     // HP bar below
-    var barW = 28;
-    var barH = 3;
+    var barW = this.isMetastasis ? 16 : 28;
+    var barH = this.isMetastasis ? 2 : 3;
     var barX = px - barW / 2;
-    var barY = py + Math.floor(diag / 2) + 3;
+    var barY = py + Math.floor(diag / 2) + 2;
     ctx.fillStyle = '#200010';
     ctx.fillRect(barX, barY, barW, barH);
-    ctx.fillStyle = '#e04040';
+    ctx.fillStyle = this.isMetastasis ? '#c04080' : '#e04040';
     ctx.fillRect(barX, barY, Math.round(barW * hpFrac), barH);
 };

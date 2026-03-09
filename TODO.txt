@@ -6,10 +6,14 @@ ADEPT GAME - TODO
     - Clearance half-lives, binding affinities, DAR, payload potency
     - Relative dose equivalences grounded in real PK data
 
-[ ] TUMOR METASTASIS
-    - Tumor metastasises over time (spawns smaller secondary tumors)
-    - Adds urgency/pressure to treat quickly
-    - Secondary tumors could be smaller, lower HP, spread from original
+[x] TUMOR METASTASIS
+    - Stage selection: Stage I (single tumor) / Stage IV (metastatic)
+    - Primary tumor fires magenta laser beam from eye to spawn secondary tumors
+    - Beam sequence: charge (0.5s) → beam extends (0.3s) → impact (0.2s)
+    - Mets: half-scale sprite, 30% primary HP, faster swim, pink HP bar
+    - First met at ~15s, then every ~12s, max 3 secondaries
+    - Win condition: ALL tumors must be killed (primary + mets)
+    - PK clearance only accelerates when all tumors dead
 
 [ ] SCORING & HIGH SCORES
     - Scoring metric based on therapeutic index (ratio of tumor kill to healthy cuttlefish damage)
@@ -25,10 +29,11 @@ ADEPT GAME - TODO
     - Could be a "lab bench" screen before each mode
     - Educational: lets players discover why certain parameters matter
 
-[ ] UI TEXT & READABILITY
-    - All text should maintain retro arcade vibes but is currently blurry/hard to read
-    - Needs crisp pixel font rendering (disable anti-aliasing, use bitmap font or pixelSnap)
-    - Ensure text is legible at all canvas scale sizes
+[x] UI TEXT & READABILITY
+    - Replaced ctx.fillText with custom 4x5 bitmap font renderer (bitmap-font.js)
+    - Every character drawn pixel-by-pixel via fillRect — zero anti-aliasing
+    - Two scale levels: scale 1 (5px advance) for body text, scale 2 (10px) for titles
+    - Crisp at any canvas upscale, no Google Font dependency for game text
 
 [ ] MODE SELECTION UX
     - Play modes (Chemo, ADC, ADEPT) should be much more visually obvious
@@ -41,15 +46,21 @@ ADEPT GAME - TODO
     - Consider in-game prompts/hints during first playthrough
     - Controls reference (SPACE to charge, E for phase switch, etc.)
 
-[ ] ESC / EXIT KEY
-    - Add escape key to return to mode select / main menu at any time
-    - Should work during gameplay, results screen, etc.
+[x] ESC / EXIT KEY
+    - ESC goes "back one level": PLAYING→MENU, MODE_INTRO→MENU, MENU→TITLE
+    - [ESC] hints shown on all screens
+    - Mid-game ESC cleanly abandons round (clears entities, particles)
 
-[ ] ADC ANTIBODY COLOUR
-    - Current red doesn't palette-match well with the aquarium aesthetic
-    - Change ADC molecule colour to something more fitting (teal, gold, purple, etc.)
+[x] ADC ANTIBODY COLOUR
+    - Antibody body: teal (#40c0e0 free, #2090a0 bound) — aquatic, distinct from AE green
+    - Payload: amber (#e0a030 full, #e0c060 depleting) — warm contrast to teal body
+    - Leak glow: warm amber instead of red — no longer confused with chemo
 
 [ ] TITLE SCREEN / BRANDING
     - "Cuttlefish Bio" should be front and centre on the loading/title screen
     - Prominent logo or stylised text treatment
     - Set the brand identity before gameplay starts
+
+[ ] GAME OVER SCREEN
+    - Dedicated "Game Over" screen when all cuttlefish die
+    - Currently goes straight to results — needs a more dramatic failure state

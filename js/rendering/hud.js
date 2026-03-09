@@ -1,15 +1,15 @@
 window.ADEPT = window.ADEPT || {};
 
-ADEPT.HUD = function() {
-    this.fontLoaded = false;
-};
+ADEPT.HUD = function() {};
 
 ADEPT.HUD.prototype.drawText = function(ctx, text, x, y, color, size) {
-    ctx.fillStyle = color || '#f0f0f0';
-    // Use pixel font at small size for crisp rendering
-    ctx.font = (size || 5) + 'px "Press Start 2P", monospace';
-    ctx.textBaseline = 'top';
-    ctx.fillText(text, x, y);
+    ADEPT.BitmapFont.draw(ctx, text, x, y, color, size);
+};
+
+ADEPT.HUD.prototype.drawTextCentered = function(ctx, text, y, color, size) {
+    var w = ADEPT.BitmapFont.measure(text, size);
+    var x = Math.round(ADEPT.Config.VIRTUAL_W / 2 - w / 2);
+    ADEPT.BitmapFont.draw(ctx, text, x, y, color, size);
 };
 
 ADEPT.HUD.prototype.render = function(game) {
@@ -26,6 +26,11 @@ ADEPT.HUD.prototype.render = function(game) {
         return;
     }
 
+    if (game.state === 'STAGE_SELECT') {
+        this.renderStageSelect(ctx, game);
+        return;
+    }
+
     if (game.state === 'RESULTS') {
         this.renderResults(ctx, game);
         return;
@@ -36,17 +41,24 @@ ADEPT.HUD.prototype.render = function(game) {
         return;
     }
 
-    // Top bar - mode name
+    // Top bar - mode name + stage label
     var modeName = game.mode ? game.mode.name : '';
+    if (game.mode && game.mode.stage === 4) {
+        modeName += ' IV';
+    }
     this.drawText(ctx, modeName, T.LEFT, 4, '#f0f0f0', 5);
 
-    // Score
+    // Score (right-aligned)
     var scoreStr = 'SCORE ' + String(game.score).padStart(4, '0');
-    this.drawText(ctx, scoreStr, T.RIGHT - 50, 4, '#f0e040', 5);
+    var scoreW = ADEPT.BitmapFont.measure(scoreStr, 5);
+    this.drawText(ctx, scoreStr, T.RIGHT - scoreW - 1, 4, '#f0e040', 5);
 
     // Timer
     var timeStr = Math.floor(game.mode ? game.mode.roundTimer : 0) + 's';
     this.drawText(ctx, timeStr, T.CENTER_X - 8, 4, '#80a0c0', 5);
+
+    // ESC hint (subtle, after timer)
+    this.drawText(ctx, '[ESC]', T.CENTER_X + 10, 4, '#303850', 5);
 
     // Bottom HUD area
     var hudY = T.BOTTOM + 8;
@@ -110,22 +122,22 @@ ADEPT.HUD.prototype.render = function(game) {
         var phaseY = hudY + 12;
         if (game.mode.phase === 1) {
             var doseStr = game.mode.aeDoses ? ' (' + game.mode.aeDoses + '/' + game.mode.maxAEDoses + ')' : '';
-            this.drawText(ctx, '[HOLD SPACE] DEPLOY ANTIBODY-ENZYME' + doseStr, T.LEFT, phaseY, '#a040e0', 5);
+            this.drawText(ctx, '[SPACE] DEPLOY AB-ENZYME' + doseStr, T.LEFT, phaseY, '#a040e0', 5);
         } else if (game.mode.phase === 2) {
             var offTarget = game.mode.getOffTargetCount ? game.mode.getOffTargetCount(game) : 0;
             this.drawText(ctx, 'CLEARING... OFF-TARGET: ' + offTarget, T.LEFT, phaseY, '#e0a040', 5);
-            this.drawText(ctx, '[HOLD SPACE] PRODRUG', T.LEFT, phaseY + 10, '#808890', 5);
+            this.drawText(ctx, '[SPACE] PRODRUG', T.LEFT, phaseY + 10, '#808890', 5);
             if (game.mode.aeDoses < game.mode.maxAEDoses) {
-                this.drawText(ctx, '[E] MORE ENZYME', T.LEFT + 120, phaseY + 10, '#a040e0', 5);
+                this.drawText(ctx, '[E] MORE ENZYME', T.LEFT + 90, phaseY + 10, '#a040e0', 5);
             }
         } else if (game.mode.phase === 4) {
-            this.drawText(ctx, 'PRODRUG ACTIVE  [SPACE] MORE PRODRUG', T.LEFT, phaseY, '#ff4040', 5);
+            this.drawText(ctx, 'PRODRUG ACTIVE [SPACE] MORE', T.LEFT, phaseY, '#ff4040', 5);
         }
     } else if (game.mode) {
         // Non-ADEPT modes
         var instrY = hudY + 12;
         if (!game.mode.dosed) {
-            this.drawText(ctx, '[HOLD SPACE] CHARGE DOSE  [RELEASE] DEPLOY', T.LEFT, instrY, '#606080', 5);
+            this.drawText(ctx, '[HOLD SPACE] CHARGE  [RELEASE] DEPLOY', T.LEFT, instrY, '#606080', 5);
         }
     }
 
@@ -133,11 +145,18 @@ ADEPT.HUD.prototype.render = function(game) {
     if (game.input.charging) {
         this.drawText(ctx, 'CHARGING...', meterX, hudY + meterH + 2, '#e0e040', 5);
     }
+
+    // "METASTASIS!" blinking warning (Stage IV)
+    if (game.mode && game.mode._metWarningTimer > 0) {
+        var t = Date.now() / 1000;
+        if (Math.sin(t * 8) > 0) {
+            this.drawTextCentered(ctx, 'METASTASIS!', T.TOP + 6, '#e040c0', 7);
+        }
+    }
 };
 
 ADEPT.HUD.prototype.renderTitle = function(ctx) {
     var cx = ADEPT.Config.VIRTUAL_W / 2;
-    var cy = ADEPT.Config.VIRTUAL_H / 2;
     var t = Date.now() / 1000;
 
     // Subtle scanline overlay for arcade CRT feel
@@ -153,28 +172,28 @@ ADEPT.HUD.prototype.renderTitle = function(ctx) {
     ctx.fillRect(cx - 40, 40, 80, 1);
 
     // "CUTTLEFISH BIO" — main branding, big and teal
-    this.drawText(ctx, 'CUTTLEFISH', cx - 42, 52, '#40e0c0', 8);
-    this.drawText(ctx, 'BIO', cx - 12, 66, '#40e0c0', 8);
+    this.drawTextCentered(ctx, 'CUTTLEFISH', 50, '#40e0c0', 8);
+    this.drawTextCentered(ctx, 'BIO', 64, '#40e0c0', 8);
 
-    // Decorative dot separators
+    // Decorative dot separators (flanking BIO)
     ctx.fillStyle = '#40e0c0';
-    ctx.fillRect(cx - 22, 70, 2, 2);
-    ctx.fillRect(cx + 20, 70, 2, 2);
+    ctx.fillRect(cx - 22, 68, 2, 2);
+    ctx.fillRect(cx + 20, 68, 2, 2);
 
     // "— ADEPT —" subtitle
     ctx.fillStyle = '#304060';
-    ctx.fillRect(cx - 70, 88, 140, 1);
-    this.drawText(ctx, 'A D E P T', cx - 30, 98, '#f0f0f0', 7);
+    ctx.fillRect(cx - 70, 84, 140, 1);
+    this.drawTextCentered(ctx, 'A D E P T', 92, '#f0f0f0', 7);
     ctx.fillStyle = '#304060';
-    ctx.fillRect(cx - 70, 112, 140, 1);
+    ctx.fillRect(cx - 70, 108, 140, 1);
 
     // Tagline
-    this.drawText(ctx, 'OUTSMART THE INVADER', cx - 48, 124, '#607890', 5);
+    this.drawTextCentered(ctx, 'OUTSMART THE INVADER', 118, '#607890', 5);
 
     // Animated cuttlefish swimming across the screen
     var fishPhase = t * 0.4;
     var fishX = ((fishPhase % 1) * (ADEPT.Config.VIRTUAL_W + 40)) - 20;
-    var fishY = 152 + Math.sin(t * 1.5) * 4;
+    var fishY = 140 + Math.sin(t * 1.5) * 4;
     var sprite = ADEPT.Sprites ? ADEPT.Sprites.get('cuttlefish-flip') : null;
     if (sprite && sprite.complete) {
         ctx.globalAlpha = 0.4;
@@ -188,42 +207,43 @@ ADEPT.HUD.prototype.renderTitle = function(ctx) {
     // "PRESS ANY KEY" — classic arcade blink
     var blink = Math.sin(t * 3) > 0;
     if (blink) {
-        this.drawText(ctx, 'PRESS ANY KEY', cx - 32, 178, '#e0e040', 5);
+        this.drawTextCentered(ctx, 'PRESS ANY KEY', 170, '#e0e040', 5);
     }
 
     // Bottom decorative line
     ctx.fillStyle = '#1a4060';
-    ctx.fillRect(cx - 80, 196, 160, 1);
+    ctx.fillRect(cx - 80, 190, 160, 1);
     ctx.fillStyle = '#40e0c0';
-    ctx.fillRect(cx - 40, 196, 80, 1);
+    ctx.fillRect(cx - 40, 190, 80, 1);
 
     // Copyright/version
-    this.drawText(ctx, '2026 CUTTLEFISH BIO', cx - 44, 210, '#303850', 5);
+    this.drawTextCentered(ctx, '2026 CUTTLEFISH BIO', 202, '#303850', 5);
 };
 
 ADEPT.HUD.prototype.renderMenu = function(ctx) {
     var cx = ADEPT.Config.VIRTUAL_W / 2;
 
-    this.drawText(ctx, 'ADEPT GAME', cx - 30, 30, '#40e0c0', 8);
-    this.drawText(ctx, 'by Cuttlefish Bio', cx - 40, 48, '#607090', 5);
+    this.drawTextCentered(ctx, 'ADEPT GAME', 30, '#40e0c0', 8);
+    this.drawTextCentered(ctx, 'by Cuttlefish Bio', 48, '#607090', 5);
 
     // Decorative line
     ctx.fillStyle = '#304060';
-    ctx.fillRect(cx - 60, 62, 120, 1);
+    ctx.fillRect(cx - 60, 60, 120, 1);
 
-    this.drawText(ctx, '[1] SYSTEMIC CHEMO', cx - 48, 80, '#ff4040', 6);
-    this.drawText(ctx, 'Floods the tank with toxin', cx - 58, 92, '#606080', 5);
+    this.drawTextCentered(ctx, '[1] SYSTEMIC CHEMO', 72, '#ff4040', 5);
+    this.drawTextCentered(ctx, 'Floods the tank with toxin', 82, '#606080', 5);
 
-    this.drawText(ctx, '[2] ADC', cx - 48, 112, '#40e040', 6);
-    this.drawText(ctx, 'Antibody-drug conjugate', cx - 50, 124, '#606080', 5);
+    this.drawTextCentered(ctx, '[2] ADC', 100, '#40e040', 5);
+    this.drawTextCentered(ctx, 'Antibody-drug conjugate', 110, '#606080', 5);
 
-    this.drawText(ctx, '[3] ADEPT', cx - 48, 144, '#a040e0', 6);
-    this.drawText(ctx, 'Pretargeted enzyme-prodrug', cx - 58, 156, '#606080', 5);
+    this.drawTextCentered(ctx, '[3] ADEPT', 128, '#a040e0', 5);
+    this.drawTextCentered(ctx, 'Pretargeted enzyme-prodrug', 138, '#606080', 5);
 
     ctx.fillStyle = '#304060';
-    ctx.fillRect(cx - 60, 175, 120, 1);
+    ctx.fillRect(cx - 60, 156, 120, 1);
 
-    this.drawText(ctx, 'PRESS 1, 2 OR 3', cx - 38, 188, '#808890', 5);
+    this.drawTextCentered(ctx, 'PRESS 1, 2 OR 3', 168, '#808890', 5);
+    this.drawTextCentered(ctx, '[ESC] BACK', 180, '#404860', 5);
 
     // Animated cuttlefish behind menu
     var t = Date.now() / 1000;
@@ -234,17 +254,58 @@ ADEPT.HUD.prototype.renderMenu = function(ctx) {
     ctx.fillRect(Math.round(fishX) - 6, Math.round(fishY) - 2, 12, 5);
 };
 
+ADEPT.HUD.prototype.renderStageSelect = function(ctx, game) {
+    var cx = ADEPT.Config.VIRTUAL_W / 2;
+    var modeNames = ['SYSTEMIC CHEMO', 'ADC', 'ADEPT'];
+    var modeColors = ['#ff4040', '#40e040', '#a040e0'];
+    var name = modeNames[game.currentModeIndex] || '';
+    var col = modeColors[game.currentModeIndex] || '#f0f0f0';
+
+    this.drawTextCentered(ctx, name, 40, col, 8);
+
+    // Decorative line
+    ctx.fillStyle = '#304060';
+    ctx.fillRect(cx - 60, 58, 120, 1);
+
+    this.drawTextCentered(ctx, 'SELECT STAGE', 70, '#808890', 5);
+
+    this.drawTextCentered(ctx, '[1] STAGE I', 96, '#40e0c0', 7);
+    this.drawTextCentered(ctx, 'Single tumor', 114, '#606080', 5);
+
+    var unlocked = game.isStageUnlocked(game.currentModeIndex, 4);
+    if (unlocked) {
+        this.drawTextCentered(ctx, '[2] STAGE IV', 136, '#e040c0', 7);
+        this.drawTextCentered(ctx, 'Metastatic - tumor spreads!', 154, '#606080', 5);
+    } else {
+        this.drawTextCentered(ctx, '[2] STAGE IV', 136, '#403040', 7);
+        this.drawTextCentered(ctx, 'Beat Stage I to unlock', 154, '#403040', 5);
+    }
+
+    ctx.fillStyle = '#304060';
+    ctx.fillRect(cx - 60, 170, 120, 1);
+
+    this.drawTextCentered(ctx, unlocked ? 'PRESS 1 OR 2' : 'PRESS 1', 182, '#808890', 5);
+    this.drawTextCentered(ctx, '[ESC] BACK', 194, '#404860', 5);
+};
+
 ADEPT.HUD.prototype.renderIntro = function(ctx, game) {
     var cx = ADEPT.Config.VIRTUAL_W / 2;
     var modeName = game.mode ? game.mode.name : '';
     var desc = game.mode ? game.mode.description : '';
 
-    this.drawText(ctx, modeName, cx - modeName.length * 3, 50, '#f0f0f0', 8);
+    this.drawTextCentered(ctx, modeName, 50, '#f0f0f0', 8);
+
+    // Stage label
+    if (game.mode && game.mode.stage === 4) {
+        this.drawTextCentered(ctx, 'STAGE IV - METASTATIC', 66, '#e040c0', 5);
+    } else {
+        this.drawTextCentered(ctx, 'STAGE I', 66, '#40e0c0', 5);
+    }
 
     // Word wrap description
     var words = desc.split(' ');
     var line = '';
-    var lineY = 80;
+    var lineY = 84;
     for (var i = 0; i < words.length; i++) {
         var testLine = line + (line ? ' ' : '') + words[i];
         if (testLine.length > 42) {
@@ -259,7 +320,8 @@ ADEPT.HUD.prototype.renderIntro = function(ctx, game) {
         this.drawText(ctx, line, 20, lineY, '#808090', 5);
     }
 
-    this.drawText(ctx, 'PRESS ANY KEY', cx - 32, 180, '#e0e040', 5);
+    this.drawTextCentered(ctx, 'PRESS ANY KEY', 178, '#e0e040', 5);
+    this.drawTextCentered(ctx, '[ESC] BACK', 190, '#404860', 5);
 };
 
 ADEPT.HUD.prototype.renderResults = function(ctx, game) {
@@ -268,11 +330,12 @@ ADEPT.HUD.prototype.renderResults = function(ctx, game) {
     if (!result) return;
 
     var modeName = game.mode ? game.mode.name : '';
-    this.drawText(ctx, 'RESULTS', cx - 20, 20, '#f0f0f0', 7);
-    this.drawText(ctx, modeName, cx - modeName.length * 2.5, 35, '#808090', 5);
+    var stageStr = game.currentStage === 4 ? ' - STAGE IV' : ' - STAGE I';
+    this.drawTextCentered(ctx, 'RESULTS', 20, '#f0f0f0', 7);
+    this.drawTextCentered(ctx, modeName + stageStr, 38, '#808090', 5);
 
     ctx.fillStyle = '#304060';
-    ctx.fillRect(30, 48, 196, 1);
+    ctx.fillRect(30, 50, 196, 1);
 
     var y = 58;
     var tumorLabel = result.tumorKilled ? 'YES' : 'NO';
@@ -295,41 +358,33 @@ ADEPT.HUD.prototype.renderResults = function(ctx, game) {
     ctx.fillRect(30, y, 196, 1);
 
     y += 8;
-    this.drawText(ctx, 'TOTAL:', 30, y, '#f0f0f0', 6);
-    this.drawText(ctx, String(result.score), 180, y, '#f0e040', 6);
+    this.drawText(ctx, 'TOTAL:', 30, y, '#f0f0f0', 5);
+    this.drawText(ctx, String(result.score), 180, y, '#f0e040', 5);
 
     // Stars
-    y += 20;
+    y += 16;
     for (var i = 0; i < 3; i++) {
         var filled = i < result.stars;
         var sx = cx - 20 + i * 16;
-        if (filled) {
-            ctx.fillStyle = '#f0e040';
-            // Star shape (simple pixel star)
-            ctx.fillRect(sx + 2, y, 3, 1);
-            ctx.fillRect(sx, y + 1, 7, 1);
-            ctx.fillRect(sx + 1, y + 2, 5, 1);
-            ctx.fillRect(sx + 1, y + 3, 2, 1);
-            ctx.fillRect(sx + 4, y + 3, 2, 1);
-        } else {
-            ctx.fillStyle = '#303040';
-            ctx.fillRect(sx + 2, y, 3, 1);
-            ctx.fillRect(sx, y + 1, 7, 1);
-            ctx.fillRect(sx + 1, y + 2, 5, 1);
-            ctx.fillRect(sx + 1, y + 3, 2, 1);
-            ctx.fillRect(sx + 4, y + 3, 2, 1);
-        }
+        ctx.fillStyle = filled ? '#f0e040' : '#303040';
+        // Star shape (simple pixel star)
+        ctx.fillRect(sx + 2, y, 3, 1);
+        ctx.fillRect(sx, y + 1, 7, 1);
+        ctx.fillRect(sx + 1, y + 2, 5, 1);
+        ctx.fillRect(sx + 1, y + 3, 2, 1);
+        ctx.fillRect(sx + 4, y + 3, 2, 1);
     }
 
     y += 16;
     if (result.stars === 3) {
-        this.drawText(ctx, 'PERFECT!', cx - 20, y, '#f0e040', 6);
+        this.drawTextCentered(ctx, 'PERFECT!', y, '#f0e040', 5);
     } else if (result.stars === 0 && !result.tumorKilled) {
-        this.drawText(ctx, 'TUMOR SURVIVED...', cx - 40, y, '#e04040', 5);
+        this.drawTextCentered(ctx, 'TUMOR SURVIVED...', y, '#e04040', 5);
     }
 
-    y += 20;
-    this.drawText(ctx, '[R] RETRY', 40, y, '#808890', 5);
-    this.drawText(ctx, '[N] NEXT', 110, y, '#808890', 5);
-    this.drawText(ctx, '[M] MENU', 175, y, '#808890', 5);
+    y += 16;
+    this.drawText(ctx, '[R] RETRY', 30, y, '#808890', 5);
+    this.drawText(ctx, '[N] NEXT', 95, y, '#808890', 5);
+    this.drawText(ctx, '[M] MENU', 155, y, '#808890', 5);
+    this.drawText(ctx, '[ESC]', 215, y, '#404860', 5);
 };

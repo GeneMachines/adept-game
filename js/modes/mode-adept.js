@@ -1,12 +1,13 @@
 window.ADEPT = window.ADEPT || {};
 
-ADEPT.ModeADEPT = function() {
+ADEPT.ModeADEPT = function(stage) {
     ADEPT.ModeBase.call(this, {
         name: 'ADEPT',
         description: 'Two-phase pretargeting. Phase 1: deploy antibody-enzyme conjugates that stick to the tumor. Wait for off-target enzymes to clear. Phase 2: deploy harmless prodrug that only activates at the enzyme.',
         maxMolecules: 30,
         cuttlefishCount: 5,
         tumorHp: 100,
+        stage: stage || 1,
     });
     this.phase = 1; // 1=deploy AE, 2=waiting/ready for prodrug, 4=prodrug deployed
     this.prodrugMax = 50;
