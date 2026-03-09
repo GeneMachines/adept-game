@@ -120,7 +120,7 @@ ADEPT.ModeBase.prototype.update = function(dt, game) {
         if (!this._loseDelay) this._loseDelay = 0;
         this._loseDelay += dt;
         if (this._loseDelay > 1.5 && !this._hasMolecules(game)) {
-            game.endRound(false);
+            game.startGameOver();
         }
     }
 };

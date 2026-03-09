@@ -6,7 +6,7 @@ ADEPT.Game = function(canvas) {
     this.input = new ADEPT.Input(canvas);
     this.hud = new ADEPT.HUD();
 
-    this.state = 'TITLE'; // TITLE, MENU, STAGE_SELECT, MODE_INTRO, PLAYING, RESULTS
+    this.state = 'TITLE'; // TITLE, MENU, STAGE_SELECT, MODE_INTRO, PLAYING, GAME_OVER, RESULTS
     this.mode = null;
     this.entities = [];
     this.tumor = null;
@@ -14,6 +14,7 @@ ADEPT.Game = function(canvas) {
     this.result = null;
     this.currentModeIndex = 0;
     this.currentStage = 1; // 1 or 4
+    this.gameOverTimer = 0;
 
     this.TICK_RATE = 60;
     this.TICK_MS = 1000 / this.TICK_RATE;
@@ -134,6 +135,16 @@ ADEPT.Game.prototype.update = function(dt) {
             }
             break;
 
+        case 'GAME_OVER':
+            this.gameOverTimer += dt;
+            ADEPT.Particles.update(dt);
+            // Allow skip after 1.5s
+            if (this.gameOverTimer > 1.5 && this.input.consumeAnyKey()) {
+                this.endRound(false);
+            }
+            if (this.input.chargeReleased) this.input.consumeCharge();
+            break;
+
         case 'RESULTS':
             var opt = this.input.consumeOption();
             if (opt === 10) { // R - retry
@@ -152,7 +163,7 @@ ADEPT.Game.prototype.update = function(dt) {
 ADEPT.Game.prototype.render = function(dt) {
     this.renderer.clear();
 
-    if (this.state === 'TITLE' || this.state === 'MENU' || this.state === 'STAGE_SELECT' || this.state === 'RESULTS') {
+    if (this.state === 'TITLE' || this.state === 'MENU' || this.state === 'STAGE_SELECT' || this.state === 'RESULTS' || this.state === 'GAME_OVER') {
         this.hud.render(this);
         this.renderer.present();
         return;
@@ -244,6 +255,11 @@ ADEPT.Game.prototype.saveProgress = function(modeIndex, stage, tumorKilled) {
     } catch (e) {
         // localStorage unavailable
     }
+};
+
+ADEPT.Game.prototype.startGameOver = function() {
+    this.gameOverTimer = 0;
+    this.state = 'GAME_OVER';
 };
 
 ADEPT.Game.prototype.endRound = function(tumorKilled) {

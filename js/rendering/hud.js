@@ -31,6 +31,11 @@ ADEPT.HUD.prototype.render = function(game) {
         return;
     }
 
+    if (game.state === 'GAME_OVER') {
+        this.renderGameOver(ctx, game);
+        return;
+    }
+
     if (game.state === 'RESULTS') {
         this.renderResults(ctx, game);
         return;
@@ -416,4 +421,51 @@ ADEPT.HUD.prototype.renderResults = function(ctx, game) {
     this.drawText(ctx, '[N] NEXT', 95, y, '#808890', 5);
     this.drawText(ctx, '[M] MENU', 155, y, '#808890', 5);
     this.drawText(ctx, '[ESC]', 215, y, '#404860', 5);
+};
+
+ADEPT.HUD.prototype.renderGameOver = function(ctx, game) {
+    var cx = ADEPT.Config.VIRTUAL_W / 2;
+    var cy = ADEPT.Config.VIRTUAL_H / 2;
+    var t = game.gameOverTimer;
+
+    // Dark overlay that fades in
+    var fade = Math.min(1, t / 1.0);
+    ctx.fillStyle = 'rgba(10, 0, 0, ' + (fade * 0.7) + ')';
+    ctx.fillRect(0, 0, ADEPT.Config.VIRTUAL_W, ADEPT.Config.VIRTUAL_H);
+
+    // Scanlines for CRT drama
+    if (fade > 0.3) {
+        ctx.fillStyle = 'rgba(60, 0, 0, 0.08)';
+        for (var sl = 0; sl < ADEPT.Config.VIRTUAL_H; sl += 2) {
+            ctx.fillRect(0, sl, ADEPT.Config.VIRTUAL_W, 1);
+        }
+    }
+
+    // "GAME OVER" — big, red, shaking
+    if (t > 0.3) {
+        var shake = t < 1.0 ? (1.0 - t) * 3 : 0;
+        var sx = Math.round((Math.random() - 0.5) * shake);
+        var sy = Math.round((Math.random() - 0.5) * shake);
+
+        // Glow behind text
+        ctx.fillStyle = 'rgba(180, 0, 0, ' + (fade * 0.3) + ')';
+        var tw = ADEPT.BitmapFont.measure('GAME OVER', 8);
+        var tx = Math.round(cx - tw / 2) + sx;
+        ctx.fillRect(tx - 4, cy - 30 + sy, tw + 8, 18);
+
+        this.drawText(ctx, 'GAME OVER', tx, cy - 28 + sy, '#e02020', 8);
+    }
+
+    // Flavor text
+    if (t > 1.0) {
+        this.drawTextCentered(ctx, 'ALL CUTTLEFISH LOST', cy + 4, '#804040', 5);
+    }
+
+    // "PRESS ANY KEY" after delay
+    if (t > 1.5) {
+        var blink = Math.sin(Date.now() / 1000 * 3) > 0;
+        if (blink) {
+            this.drawTextCentered(ctx, 'PRESS ANY KEY', cy + 30, '#808080', 5);
+        }
+    }
 };
