@@ -1,20 +1,24 @@
 window.ADEPT = window.ADEPT || {};
 
 // Balance defaults — entity files read from here so the panel can tweak them live
+// Balance defaults — tuned to reflect real biologic relationships.
+// Chemo: non-selective, damages everything equally.
+// ADC: preferential tumor binding (~85%), payload delivered via linker cleavage.
+// ADEPT: enzyme binds tumor (~92%), prodrug only activates near enzyme.
 ADEPT.Balance = {
-    chemo_tumor_mult: 4.0,
-    chemo_cuttlefish_mult: 5.0,
+    chemo_tumor_mult: 3.5,          // chemo potency vs tumor
+    chemo_cuttlefish_mult: 4.0,     // chemo potency vs healthy cells (slightly higher — less resistant)
     chemo_cooldown: 0.3,
-    active_tumor_mult: 4,
-    active_cuttlefish_mult: 5,
-    adc_tumor_bind: 0.90,
-    ae_tumor_bind: 0.95,
-    adc_payload: 4,
-    adc_leak_dmg_mult: 0.5,
-    adc_leak_spawn_chance: 2,
-    adc_leak_drug_potency: 1.0,
-    prodrug_potency: 1.0,
-    ae_catalytic_radius: 12,
+    active_tumor_mult: 5.0,         // activated drug is concentrated, potent at target
+    active_cuttlefish_mult: 4.0,    // same drug if it drifts off-target
+    adc_tumor_bind: 0.85,           // ADC tumor binding affinity (clinical ~Kd 1-10nM)
+    ae_tumor_bind: 0.92,            // AE tumor binding (high affinity, pretargeted)
+    adc_payload: 4,                 // DAR (drug-antibody ratio, clinical range 2-8)
+    adc_leak_dmg_mult: 0.5,        // payload leak damage multiplier
+    adc_leak_spawn_chance: 2,       // chance of leaked drug spawning free
+    adc_leak_drug_potency: 0.8,    // leaked drug is slightly less potent
+    prodrug_potency: 1.2,           // prodrug activation yields concentrated drug
+    ae_catalytic_radius: 14,        // enzyme catalytic radius (slightly larger for gameplay)
 };
 
 // Mode configs — mode files read maxMolecules etc from here
