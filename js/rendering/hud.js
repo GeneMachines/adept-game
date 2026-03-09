@@ -403,38 +403,57 @@ ADEPT.HUD.prototype.renderResults = function(ctx, game) {
 
     var modeName = game.mode ? game.mode.name : '';
     var stageStr = game.currentStage === 4 ? ' - STAGE IV' : ' - STAGE I';
-    this.drawTextCentered(ctx, 'RESULTS', 20, '#f0f0f0', 7);
-    this.drawTextCentered(ctx, modeName + stageStr, 38, '#808090', 5);
+    this.drawTextCentered(ctx, 'RESULTS', 14, '#f0f0f0', 7);
+    this.drawTextCentered(ctx, modeName + stageStr, 30, '#808090', 5);
 
     ctx.fillStyle = '#304060';
-    ctx.fillRect(30, 50, 196, 1);
+    ctx.fillRect(30, 40, 196, 1);
 
-    var y = 58;
+    var y = 46;
     var tumorLabel = result.tumorKilled ? 'YES' : 'NO';
     var tumorColor = result.tumorKilled ? '#40e040' : '#e04040';
     this.drawText(ctx, 'COT KILLED:', 30, y, '#c0c0c0', 5);
     this.drawText(ctx, tumorLabel, 150, y, tumorColor, 5);
     this.drawText(ctx, '+' + result.tumorScore, 190, y, '#f0e040', 5);
 
-    y += 14;
+    y += 12;
     this.drawText(ctx, 'CUTTLEFISH:', 30, y, '#c0c0c0', 5);
     this.drawText(ctx, result.cuttlefishAlive + '/' + result.totalCuttlefish, 150, y, '#e06040', 5);
     this.drawText(ctx, '+' + result.cuttleScore, 190, y, '#f0e040', 5);
 
-    y += 14;
+    y += 12;
     this.drawText(ctx, 'EFFICIENCY:', 30, y, '#c0c0c0', 5);
     this.drawText(ctx, '+' + result.efficiencyScore, 190, y, '#f0e040', 5);
 
+    // Therapeutic index
+    y += 12;
+    var tiStr = result.therapeuticIndex + '%';
+    var tiColor = result.therapeuticIndex >= 80 ? '#40e040' : result.therapeuticIndex >= 40 ? '#e0e040' : '#e04040';
+    this.drawText(ctx, 'THERAPEUTIC INDEX:', 30, y, '#c0c0c0', 5);
+    this.drawText(ctx, tiStr, 150, y, tiColor, 5);
+
     ctx.fillStyle = '#304060';
-    y += 14;
+    y += 12;
     ctx.fillRect(30, y, 196, 1);
 
-    y += 8;
+    y += 6;
     this.drawText(ctx, 'TOTAL:', 30, y, '#f0f0f0', 5);
     this.drawText(ctx, String(result.score), 180, y, '#f0e040', 5);
 
+    // High score
+    y += 12;
+    if (result.isNewHighScore) {
+        var blink = Math.sin(Date.now() / 1000 * 4) > 0;
+        if (blink) {
+            this.drawTextCentered(ctx, 'NEW HIGH SCORE!', y, '#f0e040', 5);
+        }
+    } else if (result.highScore > 0) {
+        this.drawText(ctx, 'HIGH SCORE:', 30, y, '#606080', 5);
+        this.drawText(ctx, String(result.highScore), 180, y, '#606080', 5);
+    }
+
     // Stars
-    y += 16;
+    y += 14;
     for (var i = 0; i < 3; i++) {
         var filled = i < result.stars;
         var sx = cx - 20 + i * 16;
@@ -447,14 +466,14 @@ ADEPT.HUD.prototype.renderResults = function(ctx, game) {
         ctx.fillRect(sx + 4, y + 3, 2, 1);
     }
 
-    y += 16;
+    y += 14;
     if (result.stars === 3) {
         this.drawTextCentered(ctx, 'PERFECT!', y, '#f0e040', 5);
     } else if (result.stars === 0 && !result.tumorKilled) {
         this.drawTextCentered(ctx, 'CROWN OF THORNS SURVIVED...', y, '#e04040', 5);
     }
 
-    y += 16;
+    y += 14;
     this.drawText(ctx, '[R] RETRY', 30, y, '#808890', 5);
     this.drawText(ctx, '[N] NEXT', 95, y, '#808890', 5);
     this.drawText(ctx, '[M] MENU', 155, y, '#808890', 5);

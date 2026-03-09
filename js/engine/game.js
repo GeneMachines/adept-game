@@ -271,5 +271,11 @@ ADEPT.Game.prototype.endRound = function(tumorKilled) {
     );
     this.score = this.result.score;
     this.saveProgress(this.currentModeIndex, this.currentStage, tumorKilled);
+
+    // Check for high score
+    var modeKey = this.modeKeys[this.currentModeIndex];
+    this.result.isNewHighScore = ADEPT.Scoring.saveHighScore(modeKey, this.currentStage, this.result.score);
+    this.result.highScore = ADEPT.Scoring.getHighScore(modeKey, this.currentStage);
+
     this.state = 'RESULTS';
 };

@@ -10,6 +10,13 @@ ADEPT.Scoring = {
         var efficiencyScore = Math.floor(efficiencyRatio * 100 + timeBonus);
         var score = tumorScore + cuttleScore + efficiencyScore;
 
+        // Therapeutic index: targeting precision (0-100%)
+        // Measures how well you killed the target without harming healthy cells
+        var therapeuticIndex = 0;
+        if (tumorKilled) {
+            therapeuticIndex = Math.round((cuttlefishAlive / totalCuttlefish) * 100);
+        }
+
         var stars = 0;
         if (!tumorKilled) {
             stars = 0;
@@ -29,9 +36,31 @@ ADEPT.Scoring = {
             tumorScore: tumorScore,
             cuttleScore: cuttleScore,
             efficiencyScore: efficiencyScore,
+            therapeuticIndex: therapeuticIndex,
             tumorKilled: tumorKilled,
             cuttlefishAlive: cuttlefishAlive,
             totalCuttlefish: totalCuttlefish,
         };
+    },
+
+    getHighScore: function(modeKey, stage) {
+        try {
+            var key = 'adept_highscore_' + modeKey + '_s' + stage;
+            return parseInt(localStorage.getItem(key)) || 0;
+        } catch (e) {
+            return 0;
+        }
+    },
+
+    saveHighScore: function(modeKey, stage, score) {
+        try {
+            var key = 'adept_highscore_' + modeKey + '_s' + stage;
+            var old = parseInt(localStorage.getItem(key)) || 0;
+            if (score > old) {
+                localStorage.setItem(key, String(score));
+                return true; // new high score
+            }
+        } catch (e) {}
+        return false;
     }
 };
