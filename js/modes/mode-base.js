@@ -19,7 +19,7 @@ ADEPT.ModeBase.prototype.setup = function(game) {
 
     // Spawn tumor at random position
     var tx = T.LEFT + 30 + Math.random() * (T.RIGHT - T.LEFT - 60);
-    var ty = T.TOP + 25 + Math.random() * (T.BOTTOM - T.TOP - 50);
+    var ty = T.TOP + 25 + Math.random() * (T.CENTER_Y - T.TOP - 25);
     var tumor = new ADEPT.Tumor(tx, ty);
     tumor.hp = this.tumorHp;
     tumor.maxHp = this.tumorHp;
