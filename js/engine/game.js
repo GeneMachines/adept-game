@@ -6,7 +6,7 @@ ADEPT.Game = function(canvas) {
     this.input = new ADEPT.Input(canvas);
     this.hud = new ADEPT.HUD();
 
-    this.state = 'MENU'; // MENU, MODE_INTRO, PLAYING, RESULTS
+    this.state = 'TITLE'; // TITLE, MENU, MODE_INTRO, PLAYING, RESULTS
     this.mode = null;
     this.entities = [];
     this.tumor = null;
@@ -54,6 +54,13 @@ ADEPT.Game.prototype.update = function(dt) {
     this.input.update(dt);
 
     switch (this.state) {
+        case 'TITLE':
+            if (this.input.consumeAnyKey()) {
+                this.state = 'MENU';
+            }
+            if (this.input.chargeReleased) this.input.consumeCharge();
+            break;
+
         case 'MENU':
             var opt = this.input.consumeOption();
             if (opt === 0) this.startMode(0);
@@ -101,7 +108,7 @@ ADEPT.Game.prototype.update = function(dt) {
                 var next = (this.currentModeIndex + 1) % 3;
                 this.startMode(next);
             } else if (opt === 12) { // M - menu
-                this.state = 'MENU';
+                this.state = 'TITLE';
             }
             if (this.input.chargeReleased) this.input.consumeCharge();
             break;
@@ -111,7 +118,7 @@ ADEPT.Game.prototype.update = function(dt) {
 ADEPT.Game.prototype.render = function(dt) {
     this.renderer.clear();
 
-    if (this.state === 'MENU' || this.state === 'RESULTS') {
+    if (this.state === 'TITLE' || this.state === 'MENU' || this.state === 'RESULTS') {
         this.hud.render(this);
         this.renderer.present();
         return;

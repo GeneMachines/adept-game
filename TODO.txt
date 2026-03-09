@@ -24,3 +24,32 @@ ADEPT GAME - TODO
     - ADEPT: enzyme catalytic efficiency, prodrug activation rate
     - Could be a "lab bench" screen before each mode
     - Educational: lets players discover why certain parameters matter
+
+[ ] UI TEXT & READABILITY
+    - All text should maintain retro arcade vibes but is currently blurry/hard to read
+    - Needs crisp pixel font rendering (disable anti-aliasing, use bitmap font or pixelSnap)
+    - Ensure text is legible at all canvas scale sizes
+
+[ ] MODE SELECTION UX
+    - Play modes (Chemo, ADC, ADEPT) should be much more visually obvious
+    - Bigger/bolder mode buttons or labels on selection screen
+    - Clear visual distinction between the three options
+
+[ ] GAME INSTRUCTIONS
+    - Instructions should be more obvious, especially for ADEPT mode
+    - ADEPT two-phase mechanic (AB-enzyme → wait → prodrug) needs clearer explanation
+    - Consider in-game prompts/hints during first playthrough
+    - Controls reference (SPACE to charge, E for phase switch, etc.)
+
+[ ] ESC / EXIT KEY
+    - Add escape key to return to mode select / main menu at any time
+    - Should work during gameplay, results screen, etc.
+
+[ ] ADC ANTIBODY COLOUR
+    - Current red doesn't palette-match well with the aquarium aesthetic
+    - Change ADC molecule colour to something more fitting (teal, gold, purple, etc.)
+
+[ ] TITLE SCREEN / BRANDING
+    - "Cuttlefish Bio" should be front and centre on the loading/title screen
+    - Prominent logo or stylised text treatment
+    - Set the brand identity before gameplay starts

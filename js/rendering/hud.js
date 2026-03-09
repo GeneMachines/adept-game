@@ -16,6 +16,11 @@ ADEPT.HUD.prototype.render = function(game) {
     var ctx = game.renderer.getContext();
     var T = ADEPT.Config.TANK;
 
+    if (game.state === 'TITLE') {
+        this.renderTitle(ctx);
+        return;
+    }
+
     if (game.state === 'MENU') {
         this.renderMenu(ctx);
         return;
@@ -128,6 +133,72 @@ ADEPT.HUD.prototype.render = function(game) {
     if (game.input.charging) {
         this.drawText(ctx, 'CHARGING...', meterX, hudY + meterH + 2, '#e0e040', 5);
     }
+};
+
+ADEPT.HUD.prototype.renderTitle = function(ctx) {
+    var cx = ADEPT.Config.VIRTUAL_W / 2;
+    var cy = ADEPT.Config.VIRTUAL_H / 2;
+    var t = Date.now() / 1000;
+
+    // Subtle scanline overlay for arcade CRT feel
+    ctx.fillStyle = 'rgba(0, 20, 40, 0.15)';
+    for (var sl = 0; sl < ADEPT.Config.VIRTUAL_H; sl += 2) {
+        ctx.fillRect(0, sl, ADEPT.Config.VIRTUAL_W, 1);
+    }
+
+    // Top decorative line
+    ctx.fillStyle = '#1a4060';
+    ctx.fillRect(cx - 80, 40, 160, 1);
+    ctx.fillStyle = '#40e0c0';
+    ctx.fillRect(cx - 40, 40, 80, 1);
+
+    // "CUTTLEFISH BIO" — main branding, big and teal
+    this.drawText(ctx, 'CUTTLEFISH', cx - 42, 52, '#40e0c0', 8);
+    this.drawText(ctx, 'BIO', cx - 12, 66, '#40e0c0', 8);
+
+    // Decorative dot separators
+    ctx.fillStyle = '#40e0c0';
+    ctx.fillRect(cx - 22, 70, 2, 2);
+    ctx.fillRect(cx + 20, 70, 2, 2);
+
+    // "— ADEPT —" subtitle
+    ctx.fillStyle = '#304060';
+    ctx.fillRect(cx - 70, 88, 140, 1);
+    this.drawText(ctx, 'A D E P T', cx - 30, 98, '#f0f0f0', 7);
+    ctx.fillStyle = '#304060';
+    ctx.fillRect(cx - 70, 112, 140, 1);
+
+    // Tagline
+    this.drawText(ctx, 'OUTSMART THE INVADER', cx - 48, 124, '#607890', 5);
+
+    // Animated cuttlefish swimming across the screen
+    var fishPhase = t * 0.4;
+    var fishX = ((fishPhase % 1) * (ADEPT.Config.VIRTUAL_W + 40)) - 20;
+    var fishY = 152 + Math.sin(t * 1.5) * 4;
+    var sprite = ADEPT.Sprites ? ADEPT.Sprites.get('cuttlefish-flip') : null;
+    if (sprite && sprite.complete) {
+        ctx.globalAlpha = 0.4;
+        ctx.drawImage(sprite, Math.round(fishX) - 14, Math.round(fishY) - 13);
+        ctx.globalAlpha = 1.0;
+    } else {
+        ctx.fillStyle = 'rgba(224, 96, 64, 0.3)';
+        ctx.fillRect(Math.round(fishX) - 5, Math.round(fishY) - 3, 10, 7);
+    }
+
+    // "PRESS ANY KEY" — classic arcade blink
+    var blink = Math.sin(t * 3) > 0;
+    if (blink) {
+        this.drawText(ctx, 'PRESS ANY KEY', cx - 32, 178, '#e0e040', 5);
+    }
+
+    // Bottom decorative line
+    ctx.fillStyle = '#1a4060';
+    ctx.fillRect(cx - 80, 196, 160, 1);
+    ctx.fillStyle = '#40e0c0';
+    ctx.fillRect(cx - 40, 196, 80, 1);
+
+    // Copyright/version
+    this.drawText(ctx, '2026 CUTTLEFISH BIO', cx - 44, 210, '#303850', 5);
 };
 
 ADEPT.HUD.prototype.renderMenu = function(ctx) {
