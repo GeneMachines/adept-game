@@ -222,31 +222,60 @@ ADEPT.HUD.prototype.renderTitle = function(ctx) {
 
 ADEPT.HUD.prototype.renderMenu = function(ctx) {
     var cx = ADEPT.Config.VIRTUAL_W / 2;
+    var t = Date.now() / 1000;
 
-    this.drawTextCentered(ctx, 'ADEPT GAME', 30, '#40e0c0', 8);
-    this.drawTextCentered(ctx, 'by Cuttlefish Bio', 48, '#607090', 5);
+    // Header
+    this.drawTextCentered(ctx, 'SELECT MODE', 22, '#40e0c0', 7);
 
     // Decorative line
     ctx.fillStyle = '#304060';
-    ctx.fillRect(cx - 60, 60, 120, 1);
+    ctx.fillRect(cx - 70, 38, 140, 1);
+    ctx.fillStyle = '#40e0c0';
+    ctx.fillRect(cx - 30, 38, 60, 1);
 
-    this.drawTextCentered(ctx, '[1] SYSTEMIC CHEMO', 72, '#ff4040', 5);
-    this.drawTextCentered(ctx, 'Floods the tank with toxin', 82, '#606080', 5);
+    // Mode cards — big names with colored left borders
+    var modes = [
+        { key: '1', name: 'SYSTEMIC CHEMO', desc: 'Floods the tank with toxin', color: '#ff4040', bg: '#1a0808' },
+        { key: '2', name: 'ADC', desc: 'Antibody-drug conjugate', color: '#40e040', bg: '#081a08' },
+        { key: '3', name: 'ADEPT', desc: 'Enzyme-prodrug system', color: '#a040e0', bg: '#10081a' },
+    ];
 
-    this.drawTextCentered(ctx, '[2] ADC', 100, '#40e040', 5);
-    this.drawTextCentered(ctx, 'Antibody-drug conjugate', 110, '#606080', 5);
+    var cardX = 18;
+    var cardW = 220;
+    var cardH = 34;
+    var startY = 48;
+    var gap = 42;
 
-    this.drawTextCentered(ctx, '[3] ADEPT', 128, '#a040e0', 5);
-    this.drawTextCentered(ctx, 'Pretargeted enzyme-prodrug', 138, '#606080', 5);
+    for (var i = 0; i < modes.length; i++) {
+        var m = modes[i];
+        var y = startY + i * gap;
 
+        // Card background
+        ctx.fillStyle = m.bg;
+        ctx.fillRect(cardX, y, cardW, cardH);
+
+        // Left color border (3px wide)
+        ctx.fillStyle = m.color;
+        ctx.fillRect(cardX, y, 3, cardH);
+
+        // Key number (big)
+        this.drawText(ctx, m.key, cardX + 8, y + 4, m.color, 7);
+
+        // Mode name (big)
+        this.drawText(ctx, m.name, cardX + 22, y + 4, m.color, 7);
+
+        // Description (small)
+        this.drawText(ctx, m.desc, cardX + 22, y + 22, '#606080', 5);
+    }
+
+    // Decorative line
     ctx.fillStyle = '#304060';
-    ctx.fillRect(cx - 60, 156, 120, 1);
+    ctx.fillRect(cx - 70, startY + 3 * gap - 2, 140, 1);
 
-    this.drawTextCentered(ctx, 'PRESS 1, 2 OR 3', 168, '#808890', 5);
-    this.drawTextCentered(ctx, '[ESC] BACK', 180, '#404860', 5);
+    this.drawTextCentered(ctx, 'PRESS 1, 2 OR 3', startY + 3 * gap + 8, '#808890', 5);
+    this.drawTextCentered(ctx, '[ESC] BACK', startY + 3 * gap + 20, '#404860', 5);
 
     // Animated cuttlefish behind menu
-    var t = Date.now() / 1000;
     var fishX = cx + Math.sin(t * 0.5) * 40;
     var fishY = 210 + Math.sin(t * 0.8) * 5;
     ctx.fillStyle = 'rgba(224, 96, 64, 0.3)';
