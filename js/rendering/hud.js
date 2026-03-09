@@ -327,35 +327,73 @@ ADEPT.HUD.prototype.renderIntro = function(ctx, game) {
     var modeName = game.mode ? game.mode.name : '';
     var desc = game.mode ? game.mode.description : '';
 
-    this.drawTextCentered(ctx, modeName, 50, '#f0f0f0', 8);
+    // Dark panel behind text for readability
+    ctx.fillStyle = 'rgba(8, 12, 20, 0.85)';
+    ctx.fillRect(8, 20, ADEPT.Config.VIRTUAL_W - 16, 200);
+
+    this.drawTextCentered(ctx, modeName, 30, '#f0f0f0', 8);
 
     // Stage label
     if (game.mode && game.mode.stage === 4) {
-        this.drawTextCentered(ctx, 'STAGE IV - METASTATIC', 66, '#e040c0', 5);
+        this.drawTextCentered(ctx, 'STAGE IV - METASTATIC', 46, '#e040c0', 5);
     } else {
-        this.drawTextCentered(ctx, 'STAGE I', 66, '#40e0c0', 5);
+        this.drawTextCentered(ctx, 'STAGE I', 46, '#40e0c0', 5);
     }
+
+    // Decorative line
+    ctx.fillStyle = '#304060';
+    ctx.fillRect(cx - 60, 56, 120, 1);
 
     // Word wrap description
     var words = desc.split(' ');
     var line = '';
-    var lineY = 84;
+    var lineY = 62;
     for (var i = 0; i < words.length; i++) {
         var testLine = line + (line ? ' ' : '') + words[i];
-        if (testLine.length > 42) {
-            this.drawText(ctx, line, 20, lineY, '#808090', 5);
+        if (testLine.length > 44) {
+            this.drawText(ctx, line, 16, lineY, '#808090', 5);
             line = words[i];
-            lineY += 10;
+            lineY += 8;
         } else {
             line = testLine;
         }
     }
     if (line) {
-        this.drawText(ctx, line, 20, lineY, '#808090', 5);
+        this.drawText(ctx, line, 16, lineY, '#808090', 5);
+        lineY += 8;
     }
 
-    this.drawTextCentered(ctx, 'PRESS ANY KEY', 178, '#e0e040', 5);
-    this.drawTextCentered(ctx, '[ESC] BACK', 190, '#404860', 5);
+    // Controls section
+    lineY += 4;
+    ctx.fillStyle = '#304060';
+    ctx.fillRect(cx - 60, lineY, 120, 1);
+    lineY += 6;
+
+    this.drawText(ctx, 'CONTROLS:', 16, lineY, '#40e0c0', 5);
+    lineY += 10;
+
+    // Mode-specific controls
+    var modeIdx = game.currentModeIndex;
+    if (modeIdx === 2) {
+        // ADEPT — two-phase mechanic
+        this.drawText(ctx, '1. [HOLD SPACE] DEPLOY AB-ENZYME', 16, lineY, '#a040e0', 5);
+        lineY += 10;
+        this.drawText(ctx, '2. WAIT FOR OFF-TARGET TO CLEAR', 16, lineY, '#e0a040', 5);
+        lineY += 10;
+        this.drawText(ctx, '3. [HOLD SPACE] DEPLOY PRODRUG', 16, lineY, '#ff4040', 5);
+        lineY += 10;
+        this.drawText(ctx, '   [E] ADD MORE ENZYME', 16, lineY, '#808090', 5);
+    } else {
+        // Chemo / ADC
+        this.drawText(ctx, '[HOLD SPACE] CHARGE DOSE', 16, lineY, '#e0e040', 5);
+        lineY += 10;
+        this.drawText(ctx, '[RELEASE] DEPLOY INTO TANK', 16, lineY, '#e0e040', 5);
+        lineY += 10;
+        this.drawText(ctx, 'CHARGE MORE = BIGGER DOSE', 16, lineY, '#808090', 5);
+    }
+
+    this.drawTextCentered(ctx, 'PRESS ANY KEY', 196, '#e0e040', 5);
+    this.drawTextCentered(ctx, '[ESC] BACK', 208, '#404860', 5);
 };
 
 ADEPT.HUD.prototype.renderResults = function(ctx, game) {
