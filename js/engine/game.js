@@ -64,6 +64,7 @@ ADEPT.Game.prototype.loop = function(timestamp) {
 
 ADEPT.Game.prototype.update = function(dt) {
     this.input.update(dt);
+    this.input.setGameState(this.state);
 
     switch (this.state) {
         case 'TITLE':

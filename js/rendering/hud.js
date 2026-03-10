@@ -220,6 +220,70 @@ ADEPT.HUD.prototype.render = function(game) {
             this.drawTextCentered(ctx, HT.metastasis, T.TOP + 6, '#e040c0', 7);
         }
     }
+
+    // Mobile touch buttons overlaid on lower tank
+    if (game.input.isMobile) {
+        this.renderTouchButtons(ctx, game);
+    }
+};
+
+// Semi-transparent touch buttons overlaid on lower tank during PLAYING
+ADEPT.HUD.prototype.renderTouchButtons = function(ctx, game) {
+    var z = game.input.touchZones;
+    var charging = game.input.charging;
+
+    // ── CHARGE button (left) ────────────────────────────
+    var cz = z.charge;
+    ctx.fillStyle = charging ? 'rgba(40, 60, 100, 0.6)' : 'rgba(10, 10, 30, 0.4)';
+    ctx.fillRect(cz.x, cz.y, cz.w, cz.h);
+    ctx.fillStyle = charging ? '#6080c0' : '#303850';
+    ctx.fillRect(cz.x, cz.y, cz.w, 1);
+    ctx.fillRect(cz.x, cz.y + cz.h - 1, cz.w, 1);
+    ctx.fillRect(cz.x, cz.y, 1, cz.h);
+    ctx.fillRect(cz.x + cz.w - 1, cz.y, 1, cz.h);
+    var chargeLabel = charging ? 'RELEASE' : 'HOLD';
+    var clW = ADEPT.BitmapFont.measure(chargeLabel, 5);
+    var clX = Math.round(cz.x + cz.w / 2 - clW / 2);
+    var clY = Math.round(cz.y + cz.h / 2 - 3);
+    this.drawText(ctx, chargeLabel, clX, clY, charging ? '#e0e040' : '#506080', 5);
+
+    // ── ACTION button (right) — context-sensitive ───────
+    var az = z.action;
+    var actionLabel = '';
+    if (game.mode && game.mode.name === 'ADEPT') {
+        if (game.mode.phase === 1) {
+            actionLabel = 'ENZYME';
+        } else if (game.mode.phase === 2) {
+            actionLabel = 'PRODRUG';
+        } else if (game.mode.phase === 4) {
+            actionLabel = 'MORE';
+        }
+    }
+    // Only show action button when there's an action to take
+    if (actionLabel) {
+        ctx.fillStyle = 'rgba(10, 10, 30, 0.4)';
+        ctx.fillRect(az.x, az.y, az.w, az.h);
+        ctx.fillStyle = '#303850';
+        ctx.fillRect(az.x, az.y, az.w, 1);
+        ctx.fillRect(az.x, az.y + az.h - 1, az.w, 1);
+        ctx.fillRect(az.x, az.y, 1, az.h);
+        ctx.fillRect(az.x + az.w - 1, az.y, 1, az.h);
+        var alW = ADEPT.BitmapFont.measure(actionLabel, 5);
+        var alX = Math.round(az.x + az.w / 2 - alW / 2);
+        var alY = Math.round(az.y + az.h / 2 - 3);
+        this.drawText(ctx, actionLabel, alX, alY, '#506080', 5);
+    }
+
+    // ── BACK button (top center, near ESC hint) ─────────
+    var ez = z.esc;
+    ctx.fillStyle = 'rgba(10, 10, 30, 0.3)';
+    ctx.fillRect(ez.x, ez.y, ez.w, ez.h);
+    ctx.fillStyle = '#252540';
+    ctx.fillRect(ez.x, ez.y + ez.h - 1, ez.w, 1);
+    var backLabel = 'BACK';
+    var blW = ADEPT.BitmapFont.measure(backLabel, 5);
+    var blX = Math.round(ez.x + ez.w / 2 - blW / 2);
+    this.drawText(ctx, backLabel, blX, 7, '#303850', 5);
 };
 
 ADEPT.HUD.prototype.renderTitle = function(ctx) {
@@ -416,7 +480,8 @@ ADEPT.HUD.prototype.renderMenu = function(ctx) {
 
     this.drawTextCentered(ctx, TX.howToPlay, startY + 3 * gap + 10, '#40e0c0', 5);
 
-    this.drawTextCentered(ctx, TX.hint, startY + 3 * gap + 28, '#808890', 5);
+    var hintText = ADEPT.Input.isMobile ? 'TAP TO SELECT' : TX.hint;
+    this.drawTextCentered(ctx, hintText, startY + 3 * gap + 28, '#808890', 5);
     this.drawTextCentered(ctx, ADEPT.Text.prompts.back, startY + 3 * gap + 40, '#404860', 5);
 
     // Animated cuttlefish behind menu
@@ -774,14 +839,49 @@ ADEPT.HUD.prototype.renderResults = function(ctx, game) {
     }
 
     y += 14;
-    this.drawText(ctx, TX.retry, 14, y, '#404860', 5);
-    this.drawText(ctx, TX.menu, 80, y, '#404860', 5);
-    this.drawText(ctx, '[I] INFO', 150, y, '#404860', 5);
+    // On mobile, render larger tappable button-style labels
+    if (ADEPT.Input.isMobile) {
+        var btnW = 70;
+        var btnH = 14;
+        var btnY = y - 2;
+        // RETRY button
+        ctx.fillStyle = 'rgba(10, 10, 30, 0.5)';
+        ctx.fillRect(4, btnY, btnW, btnH);
+        ctx.fillStyle = '#303850';
+        ctx.fillRect(4, btnY, btnW, 1);
+        ctx.fillRect(4, btnY + btnH - 1, btnW, 1);
+        ctx.fillRect(4, btnY, 1, btnH);
+        ctx.fillRect(4 + btnW - 1, btnY, 1, btnH);
+        this.drawText(ctx, 'RETRY', 18, y, '#404860', 5);
+        // MENU button
+        ctx.fillStyle = 'rgba(10, 10, 30, 0.5)';
+        ctx.fillRect(78, btnY, btnW, btnH);
+        ctx.fillStyle = '#303850';
+        ctx.fillRect(78, btnY, btnW, 1);
+        ctx.fillRect(78, btnY + btnH - 1, btnW, 1);
+        ctx.fillRect(78, btnY, 1, btnH);
+        ctx.fillRect(78 + btnW - 1, btnY, 1, btnH);
+        this.drawText(ctx, 'MENU', 96, y, '#404860', 5);
+        // INFO button
+        ctx.fillStyle = 'rgba(10, 10, 30, 0.5)';
+        ctx.fillRect(152, btnY, btnW, btnH);
+        ctx.fillStyle = '#303850';
+        ctx.fillRect(152, btnY, btnW, 1);
+        ctx.fillRect(152, btnY + btnH - 1, btnW, 1);
+        ctx.fillRect(152, btnY, 1, btnH);
+        ctx.fillRect(152 + btnW - 1, btnY, 1, btnH);
+        this.drawText(ctx, 'INFO', 172, y, '#404860', 5);
+    } else {
+        this.drawText(ctx, TX.retry, 14, y, '#404860', 5);
+        this.drawText(ctx, TX.menu, 80, y, '#404860', 5);
+        this.drawText(ctx, '[I] INFO', 150, y, '#404860', 5);
+    }
 
     y += 14;
     var blink = Math.sin(Date.now() / 1000 * 3) > 0;
     if (blink) {
-        this.drawTextCentered(ctx, ADEPT.Text.prompts.pressAnyKey, y, '#e0e040', 5);
+        var tapPrompt = ADEPT.Input.isMobile ? 'TAP TO CONTINUE' : ADEPT.Text.prompts.pressAnyKey;
+        this.drawTextCentered(ctx, tapPrompt, y, '#e0e040', 5);
     }
 };
 

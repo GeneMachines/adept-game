@@ -66,3 +66,37 @@ ADEPT GAME - TODO
     - Dark red overlay with CRT scanlines
     - Shaking "GAME OVER" text with red glow, "ALL CUTTLEFISH LOST" flavor
     - 1.5s delay before "PRESS ANY KEY" blinks, then transitions to results
+
+[x] RPG TEXT CRAWL & SPACEBAR FLOW
+    - Narrative screen with typewriter text crawl (configurable chars/sec, pauses)
+    - Spacebar/any-key progression through all screens (no more [N] NEXT)
+    - Ending screen after ADEPT mode completion
+
+[x] CENTRALIZED TEXT CONFIG
+    - All game text in js/config/text.js for easy editing
+    - Supports plain strings (default gray) and { text, color } for colored emphasis
+
+[x] RESULTS INFO PAGE
+    - [I] on results screen opens per-mode educational info page
+    - Structure: title, facts, references, [ESC] BACK
+    - Placeholder content — needs real facts & references
+
+[x] OG META TAGS
+    - Open Graph + Twitter Card meta tags for link preview thumbnails
+    - Gameplay screenshot (og-preview.jpg) for rich sharing cards
+
+[ ] RESULTS INFO CONTENT
+    - Fill in real educational facts and literature references for each mode
+    - chemo, ADC, and ADEPT sections in text.js → resultsInfo
+
+[ ] TOUCH CONTROLS
+    - Tap mode cards on menu to select
+    - Tap-back gesture for ESC on overlay screens
+    - Mobile-friendly input for non-keyboard players
+
+[ ] SOUND EFFECTS
+    - Basic arcade sound effects for key actions
+
+[ ] ADEPT MODE GUIDANCE
+    - Clearer phase prompts for first-time players
+    - Better visual cues for the two-step deploy sequence
