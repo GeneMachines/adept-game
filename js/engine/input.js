@@ -205,13 +205,15 @@ ADEPT.Input.prototype.updateHTMLButtons = function(state) {
             var maxed = game.mode.aeDoses >= game.mode.maxAEDoses;
 
             if (phase === 1) {
-                // Enzyme mode — enzyme active, prodrug dim
+                // Enzyme mode — purple pill, enzyme selected
+                toggle.classList.remove('prodrug-active');
                 this.btnEnzyme.classList.add('active');
                 this.btnEnzyme.classList.remove('disabled');
                 this.btnProdrug.classList.remove('active');
                 this.btnProdrug.classList.remove('disabled');
             } else if (phase === 2) {
-                // Prodrug mode — prodrug active, enzyme tappable if doses remain
+                // Prodrug mode — red pill, enzyme tappable if doses remain
+                toggle.classList.add('prodrug-active');
                 this.btnProdrug.classList.add('active');
                 this.btnProdrug.classList.remove('disabled');
                 this.btnEnzyme.classList.remove('active');
@@ -221,7 +223,8 @@ ADEPT.Input.prototype.updateHTMLButtons = function(state) {
                     this.btnEnzyme.classList.remove('disabled');
                 }
             } else if (phase === 4) {
-                // Prodrug locked — prodrug active, enzyme disabled
+                // Prodrug locked — red pill, enzyme disabled
+                toggle.classList.add('prodrug-active');
                 this.btnProdrug.classList.add('active');
                 this.btnProdrug.classList.remove('disabled');
                 this.btnEnzyme.classList.remove('active');

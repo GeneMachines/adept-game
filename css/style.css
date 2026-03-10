@@ -82,11 +82,15 @@ body {
     background: rgba(30, 30, 50, 0.8);
 }
 
-/* ── ADEPT enzyme/prodrug toggle ─────────────────── */
+/* ── ADEPT enzyme/prodrug pill toggle ────────────── */
 .toggle-group {
     display: flex;
     flex: 1.5;
     max-width: 220px;
+    border-radius: 100px;
+    background: #a040e0;
+    padding: 3px;
+    gap: 0;
 }
 
 .toggle-group.hidden {
@@ -97,39 +101,36 @@ body {
     font-family: 'Press Start 2P', monospace;
     font-size: 8px;
     flex: 1;
-    padding: 14px 4px;
-    border: 1px solid #252540;
-    background: rgba(10, 10, 30, 0.8);
-    color: #353550;
+    padding: 11px 6px;
+    border: none;
+    border-radius: 100px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.5);
     text-align: center;
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
     touch-action: manipulation;
-    transition: none;
+    transition: background 0.15s, color 0.15s;
 }
 
-.toggle-opt:first-child {
-    border-right: none;
-}
-
-/* Active enzyme = purple */
-#btn-enzyme.active {
-    border-color: #a040e0;
+/* Active option — white pill with colored text */
+.toggle-opt.active {
+    background: #0a0a1a;
     color: #a040e0;
-    background: rgba(80, 20, 120, 0.3);
 }
 
-/* Active prodrug = red */
-#btn-prodrug.active {
-    border-color: #ff4040;
+/* Prodrug active — red tint on outer pill */
+.toggle-group.prodrug-active {
+    background: #c03030;
+}
+
+.toggle-group.prodrug-active .toggle-opt.active {
     color: #ff4040;
-    background: rgba(120, 20, 20, 0.3);
 }
 
 /* Disabled state (e.g. max enzyme reached) */
 .toggle-opt.disabled {
-    color: #1a1a2a;
-    border-color: #1a1a2a;
+    color: rgba(255, 255, 255, 0.15);
     cursor: default;
 }
