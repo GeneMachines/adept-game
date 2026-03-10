@@ -86,6 +86,24 @@ ADEPT.Particles = {
                     });
                 }
                 break;
+            case 'uptake':
+                // Inward "gulp" — particles converge to the point (cell eating)
+                for (var i = 0; i < 4; i++) {
+                    var ua = (i / 4) * Math.PI * 2 + Math.random() * 0.5;
+                    var ud = 8 + Math.random() * 4;
+                    ADEPT.Particles.particles.push({
+                        x: x + Math.cos(ua) * ud,
+                        y: y + Math.sin(ua) * ud,
+                        vx: -Math.cos(ua) * ud / 0.3,
+                        vy: -Math.sin(ua) * ud / 0.3,
+                        life: 0.3,
+                        maxLife: 0.3,
+                        color: '#80c0e0',
+                        size: 1,
+                        type: 'fade',
+                    });
+                }
+                break;
             case 'met_charge':
                 // Converging sparkle particles moving inward toward eye
                 for (var i = 0; i < 3; i++) {

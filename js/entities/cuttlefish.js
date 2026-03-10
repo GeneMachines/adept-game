@@ -24,6 +24,10 @@ ADEPT.Cuttlefish = function(x, y) {
     this.boundMolecules = [];
     this.damageFlash = 0;
     this.deathTimer = 0;
+
+    // Pinocytosis — non-specific uptake of free antibodies
+    this.uptakeRadius = 14;
+    this.uptakeFlash = 0;
 };
 
 ADEPT.Cuttlefish.prototype = Object.create(ADEPT.Entity.prototype);
@@ -41,6 +45,10 @@ ADEPT.Cuttlefish.prototype.update = function(dt) {
     this.swimTimer += dt;
     this.wanderTimer += dt;
     if (this.damageFlash > 0) this.damageFlash -= dt;
+    if (this.uptakeFlash > 0) this.uptakeFlash -= dt;
+
+    // Pinocytosis — non-specific uptake of free antibodies from the water
+    this.updatePinocytosis(dt);
 
     // Pick new wander target periodically
     if (this.wanderTimer > this.wanderInterval) {
@@ -88,6 +96,44 @@ ADEPT.Cuttlefish.prototype.removeBoundMolecule = function(mol) {
     if (idx >= 0) this.boundMolecules.splice(idx, 1);
 };
 
+// Pinocytosis: cells non-specifically internalize free antibodies from plasma.
+// ADC internalization releases payload → damage. AE internalization is harmless.
+ADEPT.Cuttlefish.prototype.updatePinocytosis = function(dt) {
+    if (!ADEPT.gameInstance) return;
+    var B = ADEPT.Balance;
+    var rate = B.pinocytosis_rate || 0.15; // probability per second per nearby molecule
+    var entities = ADEPT.gameInstance.entities;
+
+    for (var i = 0; i < entities.length; i++) {
+        var e = entities[i];
+        if (!e.alive || e.bound) continue;
+        if (e.type !== 'adc' && e.type !== 'antibody_enzyme') continue;
+
+        var dx = this.x - e.x;
+        var dy = this.y - e.y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > this.uptakeRadius) continue;
+
+        // Probabilistic internalization
+        if (Math.random() > rate * dt) continue;
+
+        // Internalized! Molecule is consumed
+        e.alive = false;
+        if (ADEPT.Particles) ADEPT.Particles.spawn('uptake', e.x, e.y);
+
+        if (e.type === 'adc') {
+            // ADC carries cytotoxic payload — releases inside the cell
+            var payload = e.payloadRemaining || 0;
+            if (payload > 0) {
+                var dmg = payload * (e.potency || 1.0) * (B.pinocytosis_dmg_mult || 1.5);
+                this.damage(dmg);
+            }
+        }
+        // AE: internalized harmlessly — no payload, no damage
+        this.uptakeFlash = 0.3;
+    }
+};
+
 ADEPT.Cuttlefish.prototype.render = function(ctx) {
     var px = Math.round(this.x);
     var py = Math.round(this.y);
@@ -109,8 +155,11 @@ ADEPT.Cuttlefish.prototype.render = function(ctx) {
     var sw = sprite.width;
     var sh = sprite.height;
 
+    // Uptake flash (cyan — harmless internalization)
+    var uptake = this.uptakeFlash > 0 && !flash && !dead;
+
     // Use offscreen canvas for tint effects so source-atop is isolated to sprite pixels
-    var needTint = flash || dead;
+    var needTint = flash || dead || uptake;
     if (needTint) {
         if (!this._tintBuffer) {
             this._tintBuffer = document.createElement('canvas');
@@ -125,6 +174,10 @@ ADEPT.Cuttlefish.prototype.render = function(ctx) {
         if (flash && !dead) {
             bc.globalCompositeOperation = 'source-atop';
             bc.fillStyle = 'rgba(220, 60, 30, 0.45)';
+            bc.fillRect(0, 0, sw, sh);
+        } else if (uptake) {
+            bc.globalCompositeOperation = 'source-atop';
+            bc.fillStyle = 'rgba(80, 180, 220, 0.35)';
             bc.fillRect(0, 0, sw, sh);
         }
         if (dead) {
