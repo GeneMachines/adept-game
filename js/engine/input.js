@@ -178,25 +178,28 @@ ADEPT.Input.prototype.setupHTMLButtons = function() {
         self.anyKey = true;
     });
 
-    // Results screen buttons
+    // Results screen buttons — use touchstart for instant response (no 300ms click delay)
     this.resultsBtns = document.getElementById('results-btns');
     this.btnRetry = document.getElementById('btn-retry');
     this.btnNext  = document.getElementById('btn-next');
     this.btnInfo  = document.getElementById('btn-info');
 
-    this.btnRetry.addEventListener('click', function(e) {
+    this.btnRetry.addEventListener('touchstart', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         self.selectedOption = 10;
         self.anyKey = true;
     });
 
-    this.btnNext.addEventListener('click', function(e) {
+    this.btnNext.addEventListener('touchstart', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         self.anyKey = true; // same as spacebar — advances to next mode
     });
 
-    this.btnInfo.addEventListener('click', function(e) {
+    this.btnInfo.addEventListener('touchstart', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         self.selectedOption = 14;
         self.anyKey = true;
     });
