@@ -6,7 +6,7 @@ ADEPT.Game = function(canvas) {
     this.input = new ADEPT.Input(canvas);
     this.hud = new ADEPT.HUD();
 
-    this.state = 'TITLE'; // TITLE, NARRATIVE, MENU, STAGE_SELECT, LAB_BENCH, HOW_TO_PLAY, MODE_INTRO, PLAYING, GAME_OVER, RESULTS
+    this.state = 'TITLE'; // TITLE, NARRATIVE, MENU, STAGE_SELECT, LAB_BENCH, HOW_TO_PLAY, MODE_INTRO, PLAYING, GAME_OVER, RESULTS, RESULTS_INFO, ENDING
     this.mode = null;
     this.entities = [];
     this.tumor = null;
@@ -216,6 +216,9 @@ ADEPT.Game.prototype.update = function(dt) {
                 this.startMode(this.currentModeIndex, this.currentStage);
             } else if (opt === 12) { // M - menu
                 this.state = 'MENU';
+            } else if (opt === 14) { // I - info
+                this.input.consumeAnyKey();
+                this.state = 'RESULTS_INFO';
             } else if (this.resultsTimer > 0.5) {
                 if (this.input.consumeAnyKey()) {
                     // Spacebar / any key → advance to next mode (or ending)
@@ -245,13 +248,24 @@ ADEPT.Game.prototype.update = function(dt) {
             }
             if (this.input.chargeReleased) this.input.consumeCharge();
             break;
+
+        case 'RESULTS_INFO':
+            if (this.input.consumeEsc()) {
+                this.input.consumeOption();
+                this.input.consumeAnyKey();
+                this.state = 'RESULTS';
+            } else if (this.input.consumeAnyKey()) {
+                this.state = 'RESULTS';
+            }
+            if (this.input.chargeReleased) this.input.consumeCharge();
+            break;
     }
 };
 
 ADEPT.Game.prototype.render = function(dt) {
     this.renderer.clear();
 
-    if (this.state === 'TITLE' || this.state === 'NARRATIVE' || this.state === 'MENU' || this.state === 'STAGE_SELECT' || this.state === 'LAB_BENCH' || this.state === 'HOW_TO_PLAY' || this.state === 'RESULTS' || this.state === 'GAME_OVER' || this.state === 'ENDING') {
+    if (this.state === 'TITLE' || this.state === 'NARRATIVE' || this.state === 'MENU' || this.state === 'STAGE_SELECT' || this.state === 'LAB_BENCH' || this.state === 'HOW_TO_PLAY' || this.state === 'RESULTS' || this.state === 'RESULTS_INFO' || this.state === 'GAME_OVER' || this.state === 'ENDING') {
         this.hud.render(this);
         this.renderer.present();
         return;

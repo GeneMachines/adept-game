@@ -171,6 +171,69 @@ ADEPT.Text = {
         closing: 'THE HOMELAND IS SAVED.',
     },
 
+    // ── RESULTS INFO (per-mode educational facts) ─────────────
+    // Press [I] on results screen to view.
+    // Plain strings = default gray. { text, color } = emphasis.
+    // 'refs' array = literature references shown at bottom.
+    resultsInfo: {
+        chemo: {
+            title: 'SYSTEMIC CHEMO',
+            color: '#ff4040',
+            facts: [
+                'SYSTEMIC CHEMOTHERAPY DELIVERS',
+                'CYTOTOXIC DRUGS THROUGHOUT',
+                'THE BODY VIA THE BLOODSTREAM.',
+                '',
+                { text: 'WHILE EFFECTIVE AT KILLING', color: '#40e0c0' },
+                { text: 'CANCER CELLS, IT ALSO DAMAGES', color: '#40e0c0' },
+                { text: 'HEALTHY TISSUE — CAUSING SIDE', color: '#40e0c0' },
+                { text: 'EFFECTS LIKE NAUSEA AND FATIGUE.', color: '#40e0c0' },
+            ],
+            refs: [
+                'PLACEHOLDER REFERENCE 1',
+                'PLACEHOLDER REFERENCE 2',
+            ],
+        },
+        adc: {
+            title: 'ADC',
+            color: '#40e040',
+            facts: [
+                'ANTIBODY-DRUG CONJUGATES LINK A',
+                'CYTOTOXIC PAYLOAD TO A TARGETING',
+                'ANTIBODY VIA A CHEMICAL LINKER.',
+                '',
+                { text: 'THE ANTIBODY BINDS TUMOR ANTIGENS,', color: '#40e0c0' },
+                { text: 'DELIVERING THE DRUG DIRECTLY TO', color: '#40e0c0' },
+                { text: 'CANCER CELLS — REDUCING OFF-TARGET', color: '#40e0c0' },
+                { text: 'TOXICITY COMPARED TO CHEMO.', color: '#40e0c0' },
+            ],
+            refs: [
+                'PLACEHOLDER REFERENCE 1',
+                'PLACEHOLDER REFERENCE 2',
+            ],
+        },
+        adept: {
+            title: 'ADEPT',
+            color: '#a040e0',
+            facts: [
+                'ADEPT SEPARATES TARGETING FROM',
+                'PAYLOAD DELIVERY INTO TWO STEPS.',
+                '',
+                { text: '1. AN ANTIBODY-ENZYME CONJUGATE', color: '#e0a040' },
+                { text: '   LOCALIZES TO THE TUMOR.', color: '#e0a040' },
+                '',
+                { text: '2. A HARMLESS PRODRUG IS GIVEN', color: '#40e0c0' },
+                { text: '   AND ACTIVATED ONLY AT THE', color: '#40e0c0' },
+                { text: '   TUMOR BY THE PRE-TARGETED', color: '#40e0c0' },
+                { text: '   ENZYME.', color: '#40e0c0' },
+            ],
+            refs: [
+                'PLACEHOLDER REFERENCE 1',
+                'PLACEHOLDER REFERENCE 2',
+            ],
+        },
+    },
+
     // ── SHARED PROMPTS ────────────────────────────────────────
     prompts: {
         pressAnyKey: 'PRESS ANY KEY',

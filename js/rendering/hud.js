@@ -98,6 +98,11 @@ ADEPT.HUD.prototype.render = function(game) {
         return;
     }
 
+    if (game.state === 'RESULTS_INFO') {
+        this.renderResultsInfo(ctx, game);
+        return;
+    }
+
     if (game.state === 'MODE_INTRO') {
         this.renderIntro(ctx, game);
         return;
@@ -769,14 +774,70 @@ ADEPT.HUD.prototype.renderResults = function(ctx, game) {
     }
 
     y += 14;
-    this.drawText(ctx, TX.retry, 30, y, '#404860', 5);
-    this.drawText(ctx, TX.menu, 100, y, '#404860', 5);
+    this.drawText(ctx, TX.retry, 14, y, '#404860', 5);
+    this.drawText(ctx, TX.menu, 80, y, '#404860', 5);
+    this.drawText(ctx, '[I] INFO', 150, y, '#404860', 5);
 
     y += 14;
     var blink = Math.sin(Date.now() / 1000 * 3) > 0;
     if (blink) {
         this.drawTextCentered(ctx, ADEPT.Text.prompts.pressAnyKey, y, '#e0e040', 5);
     }
+};
+
+ADEPT.HUD.prototype.renderResultsInfo = function(ctx, game) {
+    var cx = ADEPT.Config.VIRTUAL_W / 2;
+    var modeKey = game.modeKeys[game.currentModeIndex];
+    var info = ADEPT.Text.resultsInfo[modeKey];
+    if (!info) return;
+
+    // Mode title
+    this.drawTextCentered(ctx, info.title, 14, info.color || '#f0f0f0', 7);
+
+    // Separator
+    ctx.fillStyle = '#304060';
+    ctx.fillRect(20, 30, 216, 1);
+
+    // Facts
+    var y = 38;
+    for (var i = 0; i < info.facts.length; i++) {
+        var line = info.facts[i];
+        if (typeof line === 'string') {
+            if (line === '') {
+                y += 6; // blank line = small gap
+            } else {
+                this.drawTextCentered(ctx, line, y, '#808890', 5);
+                y += 10;
+            }
+        } else {
+            this.drawTextCentered(ctx, line.text, y, line.color || '#808890', line.size || 5);
+            y += 10;
+        }
+    }
+
+    // Separator before references
+    y += 4;
+    ctx.fillStyle = '#304060';
+    ctx.fillRect(20, y, 216, 1);
+    y += 8;
+
+    // References header
+    this.drawText(ctx, 'REFERENCES:', 14, y, '#505060', 5);
+    y += 10;
+
+    for (var i = 0; i < info.refs.length; i++) {
+        var ref = info.refs[i];
+        var refText = (i + 1) + '. ' + ref;
+        this.drawText(ctx, refText, 14, y, '#505060', 5);
+        y += 10;
+    }
+
+    // Bottom separator + back prompt
+    y += 4;
+    ctx.fillStyle = '#304060';
+    ctx.fillRect(20, y, 216, 1);
+    y += 10;
+    this.drawTextCentered(ctx, ADEPT.Text.prompts.back, y, '#404860', 5);
 };
 
 ADEPT.HUD.prototype.renderEnding = function(ctx, game) {
