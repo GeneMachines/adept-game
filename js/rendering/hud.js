@@ -776,49 +776,17 @@ ADEPT.HUD.prototype.renderResults = function(ctx, game) {
     }
 
     y += 14;
-    // On mobile, render larger tappable button-style labels
-    if (ADEPT.Input.isMobile) {
-        var btnW = 70;
-        var btnH = 14;
-        var btnY = y - 2;
-        // RETRY button
-        ctx.fillStyle = 'rgba(10, 10, 30, 0.5)';
-        ctx.fillRect(4, btnY, btnW, btnH);
-        ctx.fillStyle = '#303850';
-        ctx.fillRect(4, btnY, btnW, 1);
-        ctx.fillRect(4, btnY + btnH - 1, btnW, 1);
-        ctx.fillRect(4, btnY, 1, btnH);
-        ctx.fillRect(4 + btnW - 1, btnY, 1, btnH);
-        this.drawText(ctx, 'RETRY', 18, y, '#404860', 5);
-        // MENU button
-        ctx.fillStyle = 'rgba(10, 10, 30, 0.5)';
-        ctx.fillRect(78, btnY, btnW, btnH);
-        ctx.fillStyle = '#303850';
-        ctx.fillRect(78, btnY, btnW, 1);
-        ctx.fillRect(78, btnY + btnH - 1, btnW, 1);
-        ctx.fillRect(78, btnY, 1, btnH);
-        ctx.fillRect(78 + btnW - 1, btnY, 1, btnH);
-        this.drawText(ctx, 'MENU', 96, y, '#404860', 5);
-        // INFO button
-        ctx.fillStyle = 'rgba(10, 10, 30, 0.5)';
-        ctx.fillRect(152, btnY, btnW, btnH);
-        ctx.fillStyle = '#303850';
-        ctx.fillRect(152, btnY, btnW, 1);
-        ctx.fillRect(152, btnY + btnH - 1, btnW, 1);
-        ctx.fillRect(152, btnY, 1, btnH);
-        ctx.fillRect(152 + btnW - 1, btnY, 1, btnH);
-        this.drawText(ctx, 'INFO', 172, y, '#404860', 5);
-    } else {
+    // On mobile, HTML buttons below canvas handle RETRY/NEXT/INFO
+    if (!ADEPT.Input.isMobile) {
         this.drawText(ctx, TX.retry, 14, y, '#404860', 5);
         this.drawText(ctx, TX.menu, 80, y, '#404860', 5);
         this.drawText(ctx, '[I] INFO', 150, y, '#404860', 5);
-    }
 
-    y += 14;
-    var blink = Math.sin(Date.now() / 1000 * 3) > 0;
-    if (blink) {
-        var tapPrompt = ADEPT.Input.isMobile ? 'TAP TO CONTINUE' : ADEPT.Text.prompts.pressAnyKey;
-        this.drawTextCentered(ctx, tapPrompt, y, '#e0e040', 5);
+        y += 14;
+        var blink = Math.sin(Date.now() / 1000 * 3) > 0;
+        if (blink) {
+            this.drawTextCentered(ctx, ADEPT.Text.prompts.pressAnyKey, y, '#e0e040', 5);
+        }
     }
 };
 

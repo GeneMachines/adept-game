@@ -23,8 +23,9 @@ ADEPT.ModeADEPT.prototype.update = function(dt, game) {
 
     if (this.phase === 1) {
         // Phase 1: deploy AB-enzyme (can do multiple doses)
-        // Toggle back to prodrug mode if player already deployed enzyme
+        game.input.consumePhase2(); // clear stale enzyme toggle
         if (game.input.consumeProdrugToggle() && this.aeDoses > 0) {
+            // Toggle back to prodrug mode
             this.phase = 2;
         } else if (game.input.chargeReleased) {
             var charge = game.input.consumeCharge();
@@ -33,14 +34,15 @@ ADEPT.ModeADEPT.prototype.update = function(dt, game) {
                 this.dosesUsed++;
                 this.aeDoses++;
                 this.dosed = true;
-                // After first dose, switch to phase 2 (but can still deploy more AE via E key)
+                // After first dose, switch to phase 2 (but can still deploy more AE via toggle)
                 this.phase = 2;
             }
         }
     } else if (this.phase === 2) {
-        // Waiting/ready phase — player can deploy prodrug OR more AB-enzyme
+        // Waiting/ready phase — player can deploy prodrug OR toggle back to enzyme
+        game.input.consumeProdrugToggle(); // clear stale prodrug toggle
         if (game.input.consumePhase2() && this.aeDoses < this.maxAEDoses) {
-            // E key: go back to phase 1 for another AB-enzyme dose
+            // Toggle to enzyme mode for another AB-enzyme dose
             this.phase = 1;
         } else if (game.input.chargeReleased) {
             var charge = game.input.consumeCharge();
@@ -51,7 +53,9 @@ ADEPT.ModeADEPT.prototype.update = function(dt, game) {
             }
         }
     } else if (this.phase === 4) {
-        // Can deploy more prodrug
+        // Can deploy more prodrug (locked out of enzyme)
+        game.input.consumePhase2(); // clear stale
+        game.input.consumeProdrugToggle(); // clear stale
         if (game.input.chargeReleased) {
             var charge = game.input.consumeCharge();
             if (charge > 0.05) {

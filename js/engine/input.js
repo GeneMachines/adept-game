@@ -156,27 +156,18 @@ ADEPT.Input.prototype.setupHTMLButtons = function() {
         self.btnCharge.textContent = 'HOLD';
     });
 
-    // ENZYME toggle — tap to switch to enzyme deploy mode
-    // In phase 2, fires phase2Triggered which sets phase back to 1
+    // ENZYME toggle — always set flag, let game logic decide
     this.btnEnzyme.addEventListener('click', function(e) {
         e.preventDefault();
-        var game = ADEPT.gameInstance;
-        if (game && game.mode && game.mode.phase === 2 &&
-            game.mode.aeDoses < game.mode.maxAEDoses) {
-            self.phase2Triggered = true;
-            self.anyKey = true;
-        }
+        self.phase2Triggered = true;
+        self.anyKey = true;
     });
 
-    // PRODRUG toggle — switch back to prodrug mode (from enzyme mode)
+    // PRODRUG toggle — always set flag, let game logic decide
     this.btnProdrug.addEventListener('click', function(e) {
         e.preventDefault();
-        var game = ADEPT.gameInstance;
-        if (game && game.mode && game.mode.phase === 1 &&
-            game.mode.aeDoses > 0) {
-            self.prodrugToggled = true;
-            self.anyKey = true;
-        }
+        self.prodrugToggled = true;
+        self.anyKey = true;
     });
 
     // BACK button — ESC
@@ -184,6 +175,29 @@ ADEPT.Input.prototype.setupHTMLButtons = function() {
         e.preventDefault();
         self.escPressed = true;
         self.selectedOption = 12;
+        self.anyKey = true;
+    });
+
+    // Results screen buttons
+    this.resultsBtns = document.getElementById('results-btns');
+    this.btnRetry = document.getElementById('btn-retry');
+    this.btnNext  = document.getElementById('btn-next');
+    this.btnInfo  = document.getElementById('btn-info');
+
+    this.btnRetry.addEventListener('click', function(e) {
+        e.preventDefault();
+        self.selectedOption = 10;
+        self.anyKey = true;
+    });
+
+    this.btnNext.addEventListener('click', function(e) {
+        e.preventDefault();
+        self.anyKey = true; // same as spacebar — advances to next mode
+    });
+
+    this.btnInfo.addEventListener('click', function(e) {
+        e.preventDefault();
+        self.selectedOption = 14;
         self.anyKey = true;
     });
 };
@@ -195,10 +209,13 @@ ADEPT.Input.prototype.updateHTMLButtons = function(state) {
     var controls = document.getElementById('touch-controls');
     var toggle = this.toggleGroup;
 
+    var results = this.resultsBtns;
+
     if (state === 'PLAYING') {
         controls.style.display = 'flex';
         this.btnBack.style.display = '';
         this.btnCharge.style.display = '';
+        results.classList.add('hidden');
 
         // Show toggle only in ADEPT mode
         var game = ADEPT.gameInstance;
@@ -237,19 +254,28 @@ ADEPT.Input.prototype.updateHTMLButtons = function(state) {
             toggle.classList.add('hidden');
         }
     } else {
-        // Non-playing states: hide gameplay buttons, show controls bar for back only
+        // Non-playing states: hide gameplay buttons
         this.btnCharge.style.display = 'none';
         toggle.classList.add('hidden');
 
-        // Show back button on screens that support ESC
-        var showBack = (state === 'MENU' || state === 'STAGE_SELECT' ||
-                        state === 'LAB_BENCH' || state === 'HOW_TO_PLAY' ||
-                        state === 'RESULTS_INFO');
-        if (showBack) {
+        if (state === 'RESULTS') {
+            // Show results buttons (RETRY, NEXT, INFO)
             controls.style.display = 'flex';
-            this.btnBack.style.display = '';
+            this.btnBack.style.display = 'none';
+            results.classList.remove('hidden');
         } else {
-            controls.style.display = 'none';
+            results.classList.add('hidden');
+
+            // Show back button on screens that support ESC
+            var showBack = (state === 'MENU' || state === 'STAGE_SELECT' ||
+                            state === 'LAB_BENCH' || state === 'HOW_TO_PLAY' ||
+                            state === 'RESULTS_INFO');
+            if (showBack) {
+                controls.style.display = 'flex';
+                this.btnBack.style.display = '';
+            } else {
+                controls.style.display = 'none';
+            }
         }
     }
 };

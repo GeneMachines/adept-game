@@ -143,3 +143,31 @@ body {
     color: rgba(255, 255, 255, 0.12);
     cursor: default;
 }
+
+/* ── Results screen buttons ──────────────────────── */
+.results-btns {
+    display: flex;
+    flex: 2;
+    gap: 6px;
+}
+
+.results-btns.hidden {
+    display: none !important;
+}
+
+.touch-btn.btn-result {
+    font-size: 8px;
+    padding: 14px 0;
+    max-width: 120px;
+}
+
+.touch-btn.btn-info {
+    color: #406080;
+    border-color: #304060;
+}
+
+.touch-btn.btn-info:active {
+    color: #60c0e0;
+    border-color: #4090b0;
+    background: rgba(20, 40, 60, 0.8);
+}
