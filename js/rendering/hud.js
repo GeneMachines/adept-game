@@ -12,6 +12,43 @@ ADEPT.HUD.prototype.drawTextCentered = function(ctx, text, y, color, size) {
     ADEPT.BitmapFont.draw(ctx, text, x, y, color, size);
 };
 
+// RPG-style typewriter text crawl — reveals characters one at a time
+// lines: [{text, y, color, size, pause, centered}]
+// Returns true when all text is fully revealed
+ADEPT.HUD.prototype.drawTextCrawl = function(ctx, lines, elapsed, charsPerSec) {
+    var cursor = 0;
+    var allDone = true;
+
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        cursor += (line.pause || 0);
+
+        if (elapsed < cursor) { allDone = false; break; }
+
+        var lineStart = cursor;
+        cursor += line.text.length / charsPerSec;
+
+        var lineElapsed = elapsed - lineStart;
+        var showChars = Math.min(line.text.length, Math.floor(lineElapsed * charsPerSec));
+        if (showChars <= 0) { allDone = false; break; }
+        if (showChars < line.text.length) allDone = false;
+
+        var displayText = line.text.substring(0, showChars);
+        var size = line.size || 5;
+        var color = line.color || '#808890';
+
+        if (line.centered !== false) {
+            var fullW = ADEPT.BitmapFont.measure(line.text, size);
+            var x = Math.round(ADEPT.Config.VIRTUAL_W / 2 - fullW / 2);
+            ADEPT.BitmapFont.draw(ctx, displayText, x, line.y, color, size);
+        } else {
+            ADEPT.BitmapFont.draw(ctx, displayText, line.x || 0, line.y, color, size);
+        }
+    }
+
+    return allDone;
+};
+
 ADEPT.HUD.prototype.render = function(game) {
     var ctx = game.renderer.getContext();
     var T = ADEPT.Config.TANK;
@@ -22,7 +59,7 @@ ADEPT.HUD.prototype.render = function(game) {
     }
 
     if (game.state === 'NARRATIVE') {
-        this.renderNarrative(ctx);
+        this.renderNarrative(ctx, game);
         return;
     }
 
@@ -48,6 +85,11 @@ ADEPT.HUD.prototype.render = function(game) {
 
     if (game.state === 'GAME_OVER') {
         this.renderGameOver(ctx, game);
+        return;
+    }
+
+    if (game.state === 'ENDING') {
+        this.renderEnding(ctx, game);
         return;
     }
 
@@ -84,7 +126,8 @@ ADEPT.HUD.prototype.render = function(game) {
     var hudY = T.BOTTOM + 8;
 
     // Charge meter
-    this.drawText(ctx, 'DOSE', T.LEFT, hudY, '#808080', 5);
+    var HT = ADEPT.Text.hud;
+    this.drawText(ctx, HT.dose, T.LEFT, hudY, '#808080', 5);
     var meterX = T.LEFT + 25;
     var meterW = 60;
     var meterH = 6;
@@ -128,7 +171,7 @@ ADEPT.HUD.prototype.render = function(game) {
     // Cuttlefish count
     var cuttleAlive = game.getCuttlefishAlive();
     var cuttleTotal = game.getCuttlefishTotal();
-    this.drawText(ctx, 'CUTTLEFISH', meterX + meterW + 8, hudY, '#808080', 5);
+    this.drawText(ctx, HT.cuttlefish, meterX + meterW + 8, hudY, '#808080', 5);
     var fishX = meterX + meterW + 62;
     for (var i = 0; i < cuttleTotal; i++) {
         ctx.fillStyle = i < cuttleAlive ? '#e06040' : '#303030';
@@ -142,34 +185,34 @@ ADEPT.HUD.prototype.render = function(game) {
         var phaseY = hudY + 12;
         if (game.mode.phase === 1) {
             var doseStr = game.mode.aeDoses ? ' (' + game.mode.aeDoses + '/' + game.mode.maxAEDoses + ')' : '';
-            this.drawText(ctx, '[SPACE] DEPLOY AB-ENZYME' + doseStr, T.LEFT, phaseY, '#a040e0', 5);
+            this.drawText(ctx, HT.phase1 + doseStr, T.LEFT, phaseY, '#a040e0', 5);
         } else if (game.mode.phase === 2) {
-            this.drawText(ctx, 'CLEARING...', T.LEFT, phaseY, '#e0a040', 5);
-            this.drawText(ctx, '[SPACE] PRODRUG', T.LEFT, phaseY + 10, '#808890', 5);
+            this.drawText(ctx, HT.phase2, T.LEFT, phaseY, '#e0a040', 5);
+            this.drawText(ctx, HT.phase2prodrug, T.LEFT, phaseY + 10, '#808890', 5);
             if (game.mode.aeDoses < game.mode.maxAEDoses) {
-                this.drawText(ctx, '[E] MORE ENZYME', T.LEFT + 90, phaseY + 10, '#a040e0', 5);
+                this.drawText(ctx, HT.phase2enzyme, T.LEFT + 90, phaseY + 10, '#a040e0', 5);
             }
         } else if (game.mode.phase === 4) {
-            this.drawText(ctx, 'PRODRUG ACTIVE [SPACE] MORE', T.LEFT, phaseY, '#ff4040', 5);
+            this.drawText(ctx, HT.phase4, T.LEFT, phaseY, '#ff4040', 5);
         }
     } else if (game.mode) {
         // Non-ADEPT modes
         var instrY = hudY + 12;
         if (!game.mode.dosed) {
-            this.drawText(ctx, '[HOLD SPACE] CHARGE  [RELEASE] DEPLOY', T.LEFT, instrY, '#606080', 5);
+            this.drawText(ctx, HT.instruction, T.LEFT, instrY, '#606080', 5);
         }
     }
 
     // Controls hint for charging
     if (game.input.charging) {
-        this.drawText(ctx, 'CHARGING...', meterX, hudY + meterH + 2, '#e0e040', 5);
+        this.drawText(ctx, HT.charging, meterX, hudY + meterH + 2, '#e0e040', 5);
     }
 
     // "METASTASIS!" blinking warning (Stage IV)
     if (game.mode && game.mode._metWarningTimer > 0) {
         var t = Date.now() / 1000;
         if (Math.sin(t * 8) > 0) {
-            this.drawTextCentered(ctx, 'METASTASIS!', T.TOP + 6, '#e040c0', 7);
+            this.drawTextCentered(ctx, HT.metastasis, T.TOP + 6, '#e040c0', 7);
         }
     }
 };
@@ -191,8 +234,9 @@ ADEPT.HUD.prototype.renderTitle = function(ctx) {
     ctx.fillRect(cx - 40, 40, 80, 1);
 
     // "CUTTLEFISH BIO" — main branding, big and teal
-    this.drawTextCentered(ctx, 'CUTTLEFISH', 50, '#40e0c0', 8);
-    this.drawTextCentered(ctx, 'BIO', 64, '#40e0c0', 8);
+    var TX = ADEPT.Text.title;
+    this.drawTextCentered(ctx, TX.name1, 50, '#40e0c0', 8);
+    this.drawTextCentered(ctx, TX.name2, 64, '#40e0c0', 8);
 
     // Decorative dot separators (flanking BIO)
     ctx.fillStyle = '#40e0c0';
@@ -202,12 +246,12 @@ ADEPT.HUD.prototype.renderTitle = function(ctx) {
     // "— ADEPT —" subtitle
     ctx.fillStyle = '#304060';
     ctx.fillRect(cx - 70, 84, 140, 1);
-    this.drawTextCentered(ctx, 'A D E P T', 92, '#f0f0f0', 7);
+    this.drawTextCentered(ctx, TX.subtitle, 92, '#f0f0f0', 7);
     ctx.fillStyle = '#304060';
     ctx.fillRect(cx - 70, 108, 140, 1);
 
     // Tagline
-    this.drawTextCentered(ctx, 'OUTSMART THE CROWN OF THORNS', 118, '#607890', 5);
+    this.drawTextCentered(ctx, TX.tagline, 118, '#607890', 5);
 
     // Animated cuttlefish swimming across the screen
     var fishPhase = t * 0.4;
@@ -226,7 +270,7 @@ ADEPT.HUD.prototype.renderTitle = function(ctx) {
     // "PRESS ANY KEY" — classic arcade blink
     var blink = Math.sin(t * 3) > 0;
     if (blink) {
-        this.drawTextCentered(ctx, 'PRESS ANY KEY', 170, '#e0e040', 5);
+        this.drawTextCentered(ctx, ADEPT.Text.prompts.pressAnyKey, 170, '#e0e040', 5);
     }
 
     // Bottom decorative line
@@ -236,12 +280,13 @@ ADEPT.HUD.prototype.renderTitle = function(ctx) {
     ctx.fillRect(cx - 40, 190, 80, 1);
 
     // Copyright/version
-    this.drawTextCentered(ctx, '2026 CUTTLEFISH BIO', 202, '#303850', 5);
+    this.drawTextCentered(ctx, TX.copyright, 202, '#303850', 5);
 };
 
-ADEPT.HUD.prototype.renderNarrative = function(ctx) {
+ADEPT.HUD.prototype.renderNarrative = function(ctx, game) {
     var cx = ADEPT.Config.VIRTUAL_W / 2;
-    var t = Date.now() / 1000;
+    var t = game.narrativeTimer || 0;
+    var wallT = Date.now() / 1000;
 
     // Subtle scanlines
     ctx.fillStyle = 'rgba(0, 20, 40, 0.15)';
@@ -256,9 +301,9 @@ ADEPT.HUD.prototype.renderNarrative = function(ctx) {
     ctx.fillRect(cx - 30, 28, 60, 1);
 
     // Cuttlefish sprite swimming
-    var fishPhase = t * 0.3;
+    var fishPhase = wallT * 0.3;
     var fishX = ((fishPhase % 1) * (ADEPT.Config.VIRTUAL_W + 40)) - 20;
-    var fishY = 44 + Math.sin(t * 1.2) * 3;
+    var fishY = 44 + Math.sin(wallT * 1.2) * 3;
     var sprite = ADEPT.Sprites ? ADEPT.Sprites.get('cuttlefish-flip') : null;
     if (sprite && sprite.complete) {
         ctx.globalAlpha = 0.5;
@@ -266,35 +311,53 @@ ADEPT.HUD.prototype.renderNarrative = function(ctx) {
         ctx.globalAlpha = 1.0;
     }
 
-    // Narrative text
-    this.drawTextCentered(ctx, 'THE CALM COASTAL WATERS OF', 68, '#808890', 5);
-    this.drawTextCentered(ctx, 'YOUR HOMELAND HAVE BEEN', 80, '#808890', 5);
-    this.drawTextCentered(ctx, 'SHATTERED BY THE INVASION OF', 92, '#808890', 5);
-    this.drawTextCentered(ctx, 'THE DANGEROUS', 104, '#808890', 5);
-
-    // "CROWN OF THORNS" emphasized
-    this.drawTextCentered(ctx, 'CROWN OF THORNS', 120, '#e04060', 7);
-
-    // Decorative line
-    ctx.fillStyle = '#304060';
-    ctx.fillRect(cx - 50, 138, 100, 1);
-
-    // Mission text
-    this.drawTextCentered(ctx, 'BATTLE THE INVADER WITH THE', 150, '#40e0c0', 5);
-    this.drawTextCentered(ctx, 'TOOLS AT YOUR DISPOSAL', 162, '#40e0c0', 5);
-    this.drawTextCentered(ctx, 'WHILE SPARING THE LOCALS!', 174, '#40e0c0', 5);
-
-    // Bottom decorative line
-    ctx.fillStyle = '#1a4060';
-    ctx.fillRect(cx - 80, 192, 160, 1);
-    ctx.fillStyle = '#40e0c0';
-    ctx.fillRect(cx - 30, 192, 60, 1);
-
-    // "PRESS ANY KEY"
-    var blink = Math.sin(t * 3) > 0;
-    if (blink) {
-        this.drawTextCentered(ctx, 'PRESS ANY KEY', 206, '#e0e040', 5);
+    // Narrative text crawl (RPG-style typewriter) — built from ADEPT.Text
+    var TX = ADEPT.Text.narrative;
+    var lines = [];
+    var y = 68;
+    for (var i = 0; i < TX.story.length; i++) {
+        lines.push({ text: TX.story[i], y: y });
+        y += 12;
     }
+    var storyLineCount = lines.length;
+    y += 4;
+    lines.push({ text: TX.enemy, y: y, color: '#e04060', size: 7, pause: 0.3 });
+    y += 22;
+    for (var i = 0; i < TX.mission.length; i++) {
+        var entry = { text: TX.mission[i], y: y, color: '#40e0c0' };
+        if (i === 0) entry.pause = 0.5;
+        lines.push(entry);
+        y += 12;
+    }
+    var sepY = lines[storyLineCount].y + 14; // separator between enemy name and mission
+
+    var crawlDone = this.drawTextCrawl(ctx, lines, t, 40);
+
+    // Separator between story and mission (appears when mission text starts)
+    var sepTime = 0;
+    for (var si = 0; si <= storyLineCount; si++) {
+        sepTime += (lines[si].pause || 0) + lines[si].text.length / 40;
+    }
+    if (lines[storyLineCount + 1]) sepTime += (lines[storyLineCount + 1].pause || 0);
+    if (t > sepTime) {
+        ctx.fillStyle = '#304060';
+        ctx.fillRect(cx - 50, sepY, 100, 1);
+    }
+
+    // Bottom decorative line + PRESS ANY KEY (after crawl completes)
+    if (crawlDone) {
+        ctx.fillStyle = '#1a4060';
+        ctx.fillRect(cx - 80, 192, 160, 1);
+        ctx.fillStyle = '#40e0c0';
+        ctx.fillRect(cx - 30, 192, 60, 1);
+
+        var blink = Math.sin(wallT * 3) > 0;
+        if (blink) {
+            this.drawTextCentered(ctx, ADEPT.Text.prompts.pressAnyKey, 206, '#e0e040', 5);
+        }
+    }
+
+    game.textCrawlComplete = crawlDone;
 };
 
 ADEPT.HUD.prototype.renderMenu = function(ctx) {
@@ -302,7 +365,8 @@ ADEPT.HUD.prototype.renderMenu = function(ctx) {
     var t = Date.now() / 1000;
 
     // Header
-    this.drawTextCentered(ctx, 'SELECT MODE', 22, '#40e0c0', 7);
+    var TX = ADEPT.Text.menu;
+    this.drawTextCentered(ctx, TX.header, 22, '#40e0c0', 7);
 
     // Decorative line
     ctx.fillStyle = '#304060';
@@ -311,11 +375,7 @@ ADEPT.HUD.prototype.renderMenu = function(ctx) {
     ctx.fillRect(cx - 30, 38, 60, 1);
 
     // Mode cards — big names with colored left borders
-    var modes = [
-        { key: '1', name: 'SYSTEMIC CHEMO', desc: 'Floods the tank with toxin', color: '#ff4040', bg: '#1a0808' },
-        { key: '2', name: 'ADC', desc: 'Antibody-drug conjugate', color: '#40e040', bg: '#081a08' },
-        { key: '3', name: 'ADEPT', desc: 'Enzyme-prodrug system', color: '#a040e0', bg: '#10081a' },
-    ];
+    var modes = TX.modes;
 
     var cardX = 18;
     var cardW = 220;
@@ -349,11 +409,10 @@ ADEPT.HUD.prototype.renderMenu = function(ctx) {
     ctx.fillStyle = '#304060';
     ctx.fillRect(cx - 70, startY + 3 * gap - 2, 140, 1);
 
-    this.drawTextCentered(ctx, '[L] LAB BENCH', startY + 3 * gap + 10, '#40e0c0', 5);
-    this.drawTextCentered(ctx, '[I] HOW TO PLAY', startY + 3 * gap + 22, '#40e0c0', 5);
+    this.drawTextCentered(ctx, TX.howToPlay, startY + 3 * gap + 10, '#40e0c0', 5);
 
-    this.drawTextCentered(ctx, 'PRESS 1, 2 OR 3', startY + 3 * gap + 38, '#808890', 5);
-    this.drawTextCentered(ctx, '[ESC] BACK', startY + 3 * gap + 50, '#404860', 5);
+    this.drawTextCentered(ctx, TX.hint, startY + 3 * gap + 28, '#808890', 5);
+    this.drawTextCentered(ctx, ADEPT.Text.prompts.back, startY + 3 * gap + 40, '#404860', 5);
 
     // Animated cuttlefish behind menu
     var fishX = cx + Math.sin(t * 0.5) * 40;
@@ -490,37 +549,50 @@ ADEPT.HUD.prototype.renderLabBench = function(ctx, game) {
 
 ADEPT.HUD.prototype.renderHowToPlay = function(ctx) {
     var cx = ADEPT.Config.VIRTUAL_W / 2;
+    var TX = ADEPT.Text.howToPlay;
 
-    this.drawTextCentered(ctx, 'H O W   T O   P L A Y', 18, '#40e0c0', 7);
+    this.drawTextCentered(ctx, TX.header, 18, '#40e0c0', 7);
 
     ctx.fillStyle = '#304060';
     ctx.fillRect(cx - 70, 34, 140, 1);
 
-    this.drawText(ctx, 'CONTROLS', 14, 42, '#40e0c0', 5);
-    this.drawText(ctx, '[HOLD SPACE] CHARGE DOSE', 14, 54, '#e0e040', 5);
-    this.drawText(ctx, '[RELEASE] DEPLOY INTO TANK', 14, 66, '#e0e040', 5);
-    this.drawText(ctx, 'LONGER CHARGE = BIGGER DOSE', 14, 78, '#808090', 5);
+    var y = 42;
+    this.drawText(ctx, 'CONTROLS', 14, y, '#40e0c0', 5);
+    y += 12;
+    for (var i = 0; i < TX.controls.length; i++) {
+        this.drawText(ctx, TX.controls[i].text, 14, y, TX.controls[i].color, 5);
+        y += 12;
+    }
 
+    y += 2;
     ctx.fillStyle = '#304060';
-    ctx.fillRect(cx - 70, 92, 140, 1);
+    ctx.fillRect(cx - 70, y, 140, 1);
+    y += 8;
 
-    this.drawText(ctx, 'ADEPT MODE', 14, 100, '#a040e0', 5);
-    this.drawText(ctx, '1. [SPACE] DEPLOY AB-ENZYME', 14, 112, '#a040e0', 5);
-    this.drawText(ctx, '2. WAIT FOR OFF-TARGET CLEARING', 14, 124, '#e0a040', 5);
-    this.drawText(ctx, '3. [SPACE] DEPLOY PRODRUG', 14, 136, '#ff4040', 5);
-    this.drawText(ctx, '[E] ADD MORE ENZYME', 14, 148, '#808090', 5);
+    this.drawText(ctx, TX.adeptTitle, 14, y, '#a040e0', 5);
+    y += 12;
+    for (var i = 0; i < TX.adeptSteps.length; i++) {
+        this.drawText(ctx, TX.adeptSteps[i].text, 14, y, TX.adeptSteps[i].color, 5);
+        y += 12;
+    }
 
+    y += 2;
     ctx.fillStyle = '#304060';
-    ctx.fillRect(cx - 70, 162, 140, 1);
+    ctx.fillRect(cx - 70, y, 140, 1);
+    y += 8;
 
-    this.drawText(ctx, 'GOAL', 14, 170, '#40e0c0', 5);
-    this.drawText(ctx, 'KILL THE CROWN OF THORNS', 14, 182, '#808090', 5);
-    this.drawText(ctx, 'PROTECT YOUR CUTTLEFISH', 14, 194, '#808090', 5);
+    this.drawText(ctx, TX.goalTitle, 14, y, '#40e0c0', 5);
+    y += 12;
+    for (var i = 0; i < TX.goals.length; i++) {
+        this.drawText(ctx, TX.goals[i], 14, y, '#808090', 5);
+        y += 12;
+    }
 
+    y += 2;
     ctx.fillStyle = '#304060';
-    ctx.fillRect(cx - 70, 208, 140, 1);
+    ctx.fillRect(cx - 70, y, 140, 1);
 
-    this.drawTextCentered(ctx, '[ESC] BACK', 218, '#404860', 5);
+    this.drawTextCentered(ctx, ADEPT.Text.prompts.back, y + 10, '#404860', 5);
 };
 
 ADEPT.HUD.prototype.renderIntro = function(ctx, game) {
@@ -562,54 +634,58 @@ ADEPT.HUD.prototype.renderIntro = function(ctx, game) {
         }
     }
 
-    // Narrative text — builds the story across modes
+    // Narrative text — RPG-style typewriter crawl
+    game.textCrawlComplete = false;
     if (t > 0.2) {
         ctx.fillStyle = '#304060';
         ctx.fillRect(cx - 70, titleY + 34, 140, 1);
 
         var ny = titleY + 44;
-        if (modeName === 'SYSTEMIC CHEMO') {
-            this.drawTextCentered(ctx, 'YOU DISCOVER THE CROWN OF', ny, '#808890', 5);
-            this.drawTextCentered(ctx, 'THORNS IS WEAK AGAINST A', ny + 12, '#808890', 5);
-            this.drawTextCentered(ctx, 'CHEMICAL. USE IT TO KILL THE', ny + 24, '#808890', 5);
-            this.drawTextCentered(ctx, 'INVADER, BUT BEWARE', ny + 36, '#808890', 5);
-            this.drawTextCentered(ctx, 'THE SIDE EFFECTS!', ny + 48, '#e0e040', 5);
-        } else if (modeName === 'ADC') {
-            this.drawTextCentered(ctx, 'THE CHEMO WAS EFFECTIVE BUT', ny, '#808890', 5);
-            this.drawTextCentered(ctx, 'KILLED INDISCRIMINATELY, AT', ny + 12, '#808890', 5);
-            this.drawTextCentered(ctx, 'GREAT COST TO THE LOCALS.', ny + 24, '#808890', 5);
-            this.drawTextCentered(ctx, 'BY ADDING TARGETING, SPARE', ny + 36, '#40e0c0', 5);
-            this.drawTextCentered(ctx, 'THE LOCALS!', ny + 48, '#40e0c0', 5);
-        } else if (modeName === 'ADEPT') {
-            this.drawTextCentered(ctx, 'THE ADC WAS MORE PRECISE BUT', ny, '#808890', 5);
-            this.drawTextCentered(ctx, 'STILL HARMED THE LOCALS.', ny + 12, '#808890', 5);
-            this.drawTextCentered(ctx, 'BY SPLITTING TARGETING FROM', ny + 24, '#808890', 5);
-            this.drawTextCentered(ctx, 'PAYLOAD, SAVE THE LOCALS', ny + 36, '#40e0c0', 5);
-            this.drawTextCentered(ctx, 'ONCE AND FOR ALL!', ny + 48, '#e0e040', 5);
+        var crawlElapsed = t - 0.2;
+
+        // Build narrative lines from ADEPT.Text config
+        var TX = ADEPT.Text.intro;
+        var modeKey = modeName === 'SYSTEMIC CHEMO' ? 'chemo' : modeName === 'ADC' ? 'adc' : 'adept';
+        var textDef = TX[modeKey] || [];
+        var narrativeLines = [];
+        for (var ni = 0; ni < textDef.length; ni++) {
+            var entry = textDef[ni];
+            if (typeof entry === 'string') {
+                narrativeLines.push({ text: entry, y: ny + ni * 12 });
+            } else {
+                narrativeLines.push({ text: entry.text, y: ny + ni * 12, color: entry.color });
+            }
         }
-    }
 
-    // Mode-specific controls
-    if (t > 0.3) {
-        var iy = titleY + 108;
-        ctx.fillStyle = '#304060';
-        ctx.fillRect(cx - 50, iy - 6, 100, 1);
+        this.drawTextCrawl(ctx, narrativeLines, crawlElapsed, 40);
 
-        if (modeName === 'ADEPT') {
-            this.drawTextCentered(ctx, '[SPACE] CHARGE ANTIBODY-ENZYME', iy, '#a040e0', 5);
-            this.drawTextCentered(ctx, 'WAIT FOR OFF-TARGET TO CLEAR', iy + 14, '#e0a040', 5);
-            this.drawTextCentered(ctx, '[SPACE] CHARGE PRODRUG', iy + 28, '#ff4040', 5);
-        } else {
-            this.drawTextCentered(ctx, '[HOLD SPACE] CHARGE', iy + 6, '#505060', 5);
-            this.drawTextCentered(ctx, '[RELEASE] DEPLOY', iy + 20, '#505060', 5);
+        // Compute total crawl duration for timing controls + prompt
+        var crawlDuration = 0;
+        for (var ci = 0; ci < narrativeLines.length; ci++) {
+            crawlDuration += (narrativeLines[ci].pause || 0) + narrativeLines[ci].text.length / 40;
         }
-    }
 
-    // "PRESS ANY KEY" prompt
-    if (t > 0.6) {
-        var blink = Math.sin(Date.now() / 1000 * 3) > 0;
-        if (blink) {
-            this.drawTextCentered(ctx, 'PRESS ANY KEY', titleY + 166, '#e0e040', 5);
+        // Controls appear 0.3s after narrative finishes
+        if (crawlElapsed > crawlDuration + 0.3) {
+            var controls = (modeKey === 'adept') ? TX.controls.adept : TX.controls.default;
+            var iy = titleY + 108;
+            ctx.fillStyle = '#304060';
+            ctx.fillRect(cx - 50, iy - 6, 100, 1);
+
+            var ctrlY = iy;
+            if (controls.length <= 2) ctrlY += 6; // center fewer lines
+            for (var ci = 0; ci < controls.length; ci++) {
+                this.drawTextCentered(ctx, controls[ci].text, ctrlY + ci * 14, controls[ci].color, 5);
+            }
+        }
+
+        // "PRESS ANY KEY" prompt — appears 0.6s after narrative finishes
+        if (crawlElapsed > crawlDuration + 0.6) {
+            game.textCrawlComplete = true;
+            var blink = Math.sin(Date.now() / 1000 * 3) > 0;
+            if (blink) {
+                this.drawTextCentered(ctx, ADEPT.Text.prompts.pressAnyKey, titleY + 166, '#e0e040', 5);
+            }
         }
     }
 };
@@ -619,9 +695,10 @@ ADEPT.HUD.prototype.renderResults = function(ctx, game) {
     var result = game.result;
     if (!result) return;
 
+    var TX = ADEPT.Text.results;
     var modeName = game.mode ? game.mode.name : '';
     var stageStr = game.currentStage === 4 ? ' - STAGE IV' : ' - STAGE I';
-    this.drawTextCentered(ctx, 'RESULTS', 14, '#f0f0f0', 7);
+    this.drawTextCentered(ctx, TX.header, 14, '#f0f0f0', 7);
     this.drawTextCentered(ctx, modeName + stageStr, 30, '#808090', 5);
 
     ctx.fillStyle = '#304060';
@@ -630,24 +707,24 @@ ADEPT.HUD.prototype.renderResults = function(ctx, game) {
     var y = 46;
     var tumorLabel = result.tumorKilled ? 'YES' : 'NO';
     var tumorColor = result.tumorKilled ? '#40e040' : '#e04040';
-    this.drawText(ctx, 'COT KILLED:', 30, y, '#c0c0c0', 5);
+    this.drawText(ctx, TX.cotKilled, 30, y, '#c0c0c0', 5);
     this.drawText(ctx, tumorLabel, 150, y, tumorColor, 5);
     this.drawText(ctx, '+' + result.tumorScore, 190, y, '#f0e040', 5);
 
     y += 12;
-    this.drawText(ctx, 'CUTTLEFISH:', 30, y, '#c0c0c0', 5);
+    this.drawText(ctx, TX.cuttlefish, 30, y, '#c0c0c0', 5);
     this.drawText(ctx, result.cuttlefishAlive + '/' + result.totalCuttlefish, 150, y, '#e06040', 5);
     this.drawText(ctx, '+' + result.cuttleScore, 190, y, '#f0e040', 5);
 
     y += 12;
-    this.drawText(ctx, 'EFFICIENCY:', 30, y, '#c0c0c0', 5);
+    this.drawText(ctx, TX.efficiency, 30, y, '#c0c0c0', 5);
     this.drawText(ctx, '+' + result.efficiencyScore, 190, y, '#f0e040', 5);
 
     // Therapeutic index
     y += 12;
     var tiStr = result.therapeuticIndex + '%';
     var tiColor = result.therapeuticIndex >= 80 ? '#40e040' : result.therapeuticIndex >= 40 ? '#e0e040' : '#e04040';
-    this.drawText(ctx, 'THERAPEUTIC INDEX:', 30, y, '#c0c0c0', 5);
+    this.drawText(ctx, TX.ti, 30, y, '#c0c0c0', 5);
     this.drawText(ctx, tiStr, 150, y, tiColor, 5);
 
     ctx.fillStyle = '#304060';
@@ -655,7 +732,7 @@ ADEPT.HUD.prototype.renderResults = function(ctx, game) {
     ctx.fillRect(30, y, 196, 1);
 
     y += 6;
-    this.drawText(ctx, 'TOTAL:', 30, y, '#f0f0f0', 5);
+    this.drawText(ctx, TX.total, 30, y, '#f0f0f0', 5);
     this.drawText(ctx, String(result.score), 180, y, '#f0e040', 5);
 
     // High score
@@ -663,10 +740,10 @@ ADEPT.HUD.prototype.renderResults = function(ctx, game) {
     if (result.isNewHighScore) {
         var blink = Math.sin(Date.now() / 1000 * 4) > 0;
         if (blink) {
-            this.drawTextCentered(ctx, 'NEW HIGH SCORE!', y, '#f0e040', 5);
+            this.drawTextCentered(ctx, TX.newHigh, y, '#f0e040', 5);
         }
     } else if (result.highScore > 0) {
-        this.drawText(ctx, 'HIGH SCORE:', 30, y, '#606080', 5);
+        this.drawText(ctx, TX.highScore, 30, y, '#606080', 5);
         this.drawText(ctx, String(result.highScore), 180, y, '#606080', 5);
     }
 
@@ -686,16 +763,100 @@ ADEPT.HUD.prototype.renderResults = function(ctx, game) {
 
     y += 14;
     if (result.stars === 3) {
-        this.drawTextCentered(ctx, 'PERFECT!', y, '#f0e040', 5);
+        this.drawTextCentered(ctx, TX.perfect, y, '#f0e040', 5);
     } else if (result.stars === 0 && !result.tumorKilled) {
-        this.drawTextCentered(ctx, 'CROWN OF THORNS SURVIVED...', y, '#e04040', 5);
+        this.drawTextCentered(ctx, TX.survived, y, '#e04040', 5);
     }
 
     y += 14;
-    this.drawText(ctx, '[R] RETRY', 30, y, '#808890', 5);
-    this.drawText(ctx, '[N] NEXT', 95, y, '#808890', 5);
-    this.drawText(ctx, '[M] MENU', 155, y, '#808890', 5);
-    this.drawText(ctx, '[ESC]', 215, y, '#404860', 5);
+    this.drawText(ctx, TX.retry, 30, y, '#404860', 5);
+    this.drawText(ctx, TX.menu, 100, y, '#404860', 5);
+
+    y += 14;
+    var blink = Math.sin(Date.now() / 1000 * 3) > 0;
+    if (blink) {
+        this.drawTextCentered(ctx, ADEPT.Text.prompts.pressAnyKey, y, '#e0e040', 5);
+    }
+};
+
+ADEPT.HUD.prototype.renderEnding = function(ctx, game) {
+    var cx = ADEPT.Config.VIRTUAL_W / 2;
+    var t = game.endingTimer || 0;
+    var wallT = Date.now() / 1000;
+    var TX = ADEPT.Text.ending;
+
+    // Subtle scanlines
+    ctx.fillStyle = 'rgba(0, 20, 40, 0.15)';
+    for (var sl = 0; sl < ADEPT.Config.VIRTUAL_H; sl += 2) {
+        ctx.fillRect(0, sl, ADEPT.Config.VIRTUAL_W, 1);
+    }
+
+    // Top decorative line (teal — peaceful)
+    ctx.fillStyle = '#1a4060';
+    ctx.fillRect(cx - 80, 28, 160, 1);
+    ctx.fillStyle = '#40e0c0';
+    ctx.fillRect(cx - 30, 28, 60, 1);
+
+    // Cuttlefish swimming home (two of them, peaceful)
+    var fishPhase1 = wallT * 0.25;
+    var fishX1 = ((fishPhase1 % 1) * (ADEPT.Config.VIRTUAL_W + 40)) - 20;
+    var fishY1 = 44 + Math.sin(wallT * 1.0) * 3;
+    var fishPhase2 = (wallT * 0.25 + 0.3) % 1;
+    var fishX2 = (fishPhase2 * (ADEPT.Config.VIRTUAL_W + 40)) - 20;
+    var fishY2 = 50 + Math.sin(wallT * 1.2 + 1) * 3;
+    var sprite = ADEPT.Sprites ? ADEPT.Sprites.get('cuttlefish-flip') : null;
+    if (sprite && sprite.complete) {
+        ctx.globalAlpha = 0.5;
+        ctx.drawImage(sprite, Math.round(fishX1) - 14, Math.round(fishY1) - 13);
+        ctx.globalAlpha = 0.35;
+        ctx.drawImage(sprite, Math.round(fishX2) - 14, Math.round(fishY2) - 13);
+        ctx.globalAlpha = 1.0;
+    }
+
+    // Build crawl lines from ADEPT.Text.ending
+    var lines = [];
+    var y = 72;
+    for (var i = 0; i < TX.verse.length; i++) {
+        lines.push({ text: TX.verse[i], y: y });
+        y += 12;
+    }
+    y += 6;
+    for (var i = 0; i < TX.hope.length; i++) {
+        var entry = { text: TX.hope[i], y: y, color: '#40e0c0' };
+        if (i === 0) entry.pause = 0.6;
+        lines.push(entry);
+        y += 12;
+    }
+    y += 6;
+    lines.push({ text: TX.closing, y: y, color: '#e0e040', size: 7, pause: 0.8 });
+
+    var crawlDone = this.drawTextCrawl(ctx, lines, t, 30); // Slower pace for poetic feel
+
+    // Separator (appears with hope section)
+    var sepTime = 0;
+    for (var si = 0; si < TX.verse.length; si++) {
+        sepTime += (lines[si].pause || 0) + lines[si].text.length / 30;
+    }
+    if (t > sepTime + 0.3) {
+        ctx.fillStyle = '#304060';
+        ctx.fillRect(cx - 40, lines[TX.verse.length].y - 10, 80, 1);
+    }
+
+    // Bottom area
+    if (crawlDone) {
+        // Bottom decorative line
+        ctx.fillStyle = '#1a4060';
+        ctx.fillRect(cx - 80, 192, 160, 1);
+        ctx.fillStyle = '#40e0c0';
+        ctx.fillRect(cx - 30, 192, 60, 1);
+
+        var blink = Math.sin(wallT * 3) > 0;
+        if (blink) {
+            this.drawTextCentered(ctx, ADEPT.Text.prompts.pressAnyKey, 206, '#e0e040', 5);
+        }
+    }
+
+    game.textCrawlComplete = crawlDone;
 };
 
 ADEPT.HUD.prototype.renderGameOver = function(ctx, game) {
@@ -723,24 +884,25 @@ ADEPT.HUD.prototype.renderGameOver = function(ctx, game) {
         var sy = Math.round((Math.random() - 0.5) * shake);
 
         // Glow behind text
+        var goTX = ADEPT.Text.gameOver;
         ctx.fillStyle = 'rgba(180, 0, 0, ' + (fade * 0.3) + ')';
-        var tw = ADEPT.BitmapFont.measure('GAME OVER', 8);
+        var tw = ADEPT.BitmapFont.measure(goTX.title, 8);
         var tx = Math.round(cx - tw / 2) + sx;
         ctx.fillRect(tx - 4, cy - 30 + sy, tw + 8, 18);
 
-        this.drawText(ctx, 'GAME OVER', tx, cy - 28 + sy, '#e02020', 8);
+        this.drawText(ctx, goTX.title, tx, cy - 28 + sy, '#e02020', 8);
     }
 
     // Flavor text
     if (t > 1.0) {
-        this.drawTextCentered(ctx, 'ALL CUTTLEFISH LOST', cy + 4, '#804040', 5);
+        this.drawTextCentered(ctx, ADEPT.Text.gameOver.flavor, cy + 4, '#804040', 5);
     }
 
     // "PRESS ANY KEY" after delay
     if (t > 1.5) {
         var blink = Math.sin(Date.now() / 1000 * 3) > 0;
         if (blink) {
-            this.drawTextCentered(ctx, 'PRESS ANY KEY', cy + 30, '#808080', 5);
+            this.drawTextCentered(ctx, ADEPT.Text.prompts.pressAnyKey, cy + 30, '#808080', 5);
         }
     }
 };

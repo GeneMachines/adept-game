@@ -18,6 +18,10 @@ ADEPT.Game = function(canvas) {
     this.labBenchParams = [];
     this.labBenchCursor = 0;
     this.modeIntroTimer = 0;
+    this.narrativeTimer = 0;
+    this.endingTimer = 0;
+    this.resultsTimer = 0;
+    this.textCrawlComplete = false;
 
     this.TICK_RATE = 60;
     this.TICK_MS = 1000 / this.TICK_RATE;
@@ -64,14 +68,21 @@ ADEPT.Game.prototype.update = function(dt) {
     switch (this.state) {
         case 'TITLE':
             if (this.input.consumeAnyKey()) {
+                this.narrativeTimer = 0;
+                this.textCrawlComplete = false;
                 this.state = 'NARRATIVE';
             }
             if (this.input.chargeReleased) this.input.consumeCharge();
             break;
 
         case 'NARRATIVE':
+            this.narrativeTimer += dt;
             if (this.input.consumeAnyKey()) {
-                this.startMode(0, 1); // Into chemo after narrative
+                if (this.textCrawlComplete) {
+                    this.startMode(0, 1);
+                } else {
+                    this.narrativeTimer = 999; // Skip to full reveal
+                }
             }
             if (this.input.chargeReleased) this.input.consumeCharge();
             break;
@@ -85,10 +96,7 @@ ADEPT.Game.prototype.update = function(dt) {
             }
             var opt = this.input.consumeOption();
             if (opt === 0 || opt === 1 || opt === 2) {
-                this.currentModeIndex = opt;
-                this.state = 'STAGE_SELECT';
-            } else if (opt === 13) { // L - lab bench
-                this.setupLabBench();
+                this.startMode(opt, 1); // Skip stage select, go straight to Stage I
             } else if (opt === 14) { // I - info
                 this.state = 'HOW_TO_PLAY';
             }
@@ -150,12 +158,18 @@ ADEPT.Game.prototype.update = function(dt) {
 
         case 'MODE_INTRO':
             this.modeIntroTimer += dt;
-            // Wait for "any key" after brief delay so text is readable
-            if (this.modeIntroTimer > 0.5 && this.input.consumeAnyKey()) {
-                this.state = 'PLAYING';
+            if (this.modeIntroTimer > 0.3) {
+                if (this.input.consumeAnyKey()) {
+                    if (this.textCrawlComplete) {
+                        this.state = 'PLAYING';
+                    } else {
+                        this.modeIntroTimer = 999; // Skip to full reveal
+                    }
+                }
+            } else {
+                this.input.consumeAnyKey(); // Consume stray presses
             }
             if (this.input.chargeReleased) this.input.consumeCharge();
-            this.input.consumeAnyKey();
             break;
 
         case 'PLAYING':
@@ -196,14 +210,38 @@ ADEPT.Game.prototype.update = function(dt) {
             break;
 
         case 'RESULTS':
+            this.resultsTimer += dt;
             var opt = this.input.consumeOption();
             if (opt === 10) { // R - retry
                 this.startMode(this.currentModeIndex, this.currentStage);
-            } else if (opt === 11) { // N - next
-                var next = (this.currentModeIndex + 1) % 3;
-                this.startMode(next, this.currentStage);
             } else if (opt === 12) { // M - menu
                 this.state = 'MENU';
+            } else if (this.resultsTimer > 0.5) {
+                if (this.input.consumeAnyKey()) {
+                    // Spacebar / any key → advance to next mode (or ending)
+                    if (this.currentModeIndex === 2) {
+                        this.endingTimer = 0;
+                        this.textCrawlComplete = false;
+                        this.state = 'ENDING';
+                    } else {
+                        var next = this.currentModeIndex + 1;
+                        this.startMode(next, this.currentStage);
+                    }
+                }
+            } else {
+                this.input.consumeAnyKey(); // consume stray presses during guard
+            }
+            if (this.input.chargeReleased) this.input.consumeCharge();
+            break;
+
+        case 'ENDING':
+            this.endingTimer += dt;
+            if (this.input.consumeAnyKey()) {
+                if (this.textCrawlComplete) {
+                    this.state = 'MENU';
+                } else {
+                    this.endingTimer = 999;
+                }
             }
             if (this.input.chargeReleased) this.input.consumeCharge();
             break;
@@ -213,7 +251,7 @@ ADEPT.Game.prototype.update = function(dt) {
 ADEPT.Game.prototype.render = function(dt) {
     this.renderer.clear();
 
-    if (this.state === 'TITLE' || this.state === 'NARRATIVE' || this.state === 'MENU' || this.state === 'STAGE_SELECT' || this.state === 'LAB_BENCH' || this.state === 'HOW_TO_PLAY' || this.state === 'RESULTS' || this.state === 'GAME_OVER') {
+    if (this.state === 'TITLE' || this.state === 'NARRATIVE' || this.state === 'MENU' || this.state === 'STAGE_SELECT' || this.state === 'LAB_BENCH' || this.state === 'HOW_TO_PLAY' || this.state === 'RESULTS' || this.state === 'GAME_OVER' || this.state === 'ENDING') {
         this.hud.render(this);
         this.renderer.present();
         return;
@@ -250,6 +288,7 @@ ADEPT.Game.prototype.startMode = function(index, stage) {
 
     this.mode.setup(this);
     this.modeIntroTimer = 0;
+    this.textCrawlComplete = false;
     this.state = 'MODE_INTRO';
 };
 
@@ -359,5 +398,6 @@ ADEPT.Game.prototype.endRound = function(tumorKilled) {
     this.result.isNewHighScore = ADEPT.Scoring.saveHighScore(modeKey, this.currentStage, this.result.score);
     this.result.highScore = ADEPT.Scoring.getHighScore(modeKey, this.currentStage);
 
+    this.resultsTimer = 0;
     this.state = 'RESULTS';
 };
