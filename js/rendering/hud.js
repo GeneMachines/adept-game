@@ -21,6 +21,11 @@ ADEPT.HUD.prototype.render = function(game) {
         return;
     }
 
+    if (game.state === 'NARRATIVE') {
+        this.renderNarrative(ctx);
+        return;
+    }
+
     if (game.state === 'MENU') {
         this.renderMenu(ctx);
         return;
@@ -232,6 +237,64 @@ ADEPT.HUD.prototype.renderTitle = function(ctx) {
 
     // Copyright/version
     this.drawTextCentered(ctx, '2026 CUTTLEFISH BIO', 202, '#303850', 5);
+};
+
+ADEPT.HUD.prototype.renderNarrative = function(ctx) {
+    var cx = ADEPT.Config.VIRTUAL_W / 2;
+    var t = Date.now() / 1000;
+
+    // Subtle scanlines
+    ctx.fillStyle = 'rgba(0, 20, 40, 0.15)';
+    for (var sl = 0; sl < ADEPT.Config.VIRTUAL_H; sl += 2) {
+        ctx.fillRect(0, sl, ADEPT.Config.VIRTUAL_W, 1);
+    }
+
+    // Top decorative line
+    ctx.fillStyle = '#1a4060';
+    ctx.fillRect(cx - 80, 28, 160, 1);
+    ctx.fillStyle = '#e06040';
+    ctx.fillRect(cx - 30, 28, 60, 1);
+
+    // Cuttlefish sprite swimming
+    var fishPhase = t * 0.3;
+    var fishX = ((fishPhase % 1) * (ADEPT.Config.VIRTUAL_W + 40)) - 20;
+    var fishY = 44 + Math.sin(t * 1.2) * 3;
+    var sprite = ADEPT.Sprites ? ADEPT.Sprites.get('cuttlefish-flip') : null;
+    if (sprite && sprite.complete) {
+        ctx.globalAlpha = 0.5;
+        ctx.drawImage(sprite, Math.round(fishX) - 14, Math.round(fishY) - 13);
+        ctx.globalAlpha = 1.0;
+    }
+
+    // Narrative text
+    this.drawTextCentered(ctx, 'THE CALM COASTAL WATERS OF', 68, '#808890', 5);
+    this.drawTextCentered(ctx, 'YOUR HOMELAND HAVE BEEN', 80, '#808890', 5);
+    this.drawTextCentered(ctx, 'SHATTERED BY THE INVASION OF', 92, '#808890', 5);
+    this.drawTextCentered(ctx, 'THE DANGEROUS', 104, '#808890', 5);
+
+    // "CROWN OF THORNS" emphasized
+    this.drawTextCentered(ctx, 'CROWN OF THORNS', 120, '#e04060', 7);
+
+    // Decorative line
+    ctx.fillStyle = '#304060';
+    ctx.fillRect(cx - 50, 138, 100, 1);
+
+    // Mission text
+    this.drawTextCentered(ctx, 'BATTLE THE INVADER WITH THE', 150, '#40e0c0', 5);
+    this.drawTextCentered(ctx, 'TOOLS AT YOUR DISPOSAL', 162, '#40e0c0', 5);
+    this.drawTextCentered(ctx, 'WHILE SPARING THE LOCALS!', 174, '#40e0c0', 5);
+
+    // Bottom decorative line
+    ctx.fillStyle = '#1a4060';
+    ctx.fillRect(cx - 80, 192, 160, 1);
+    ctx.fillStyle = '#40e0c0';
+    ctx.fillRect(cx - 30, 192, 60, 1);
+
+    // "PRESS ANY KEY"
+    var blink = Math.sin(t * 3) > 0;
+    if (blink) {
+        this.drawTextCentered(ctx, 'PRESS ANY KEY', 206, '#e0e040', 5);
+    }
 };
 
 ADEPT.HUD.prototype.renderMenu = function(ctx) {
@@ -462,7 +525,6 @@ ADEPT.HUD.prototype.renderHowToPlay = function(ctx) {
 
 ADEPT.HUD.prototype.renderIntro = function(ctx, game) {
     var cx = ADEPT.Config.VIRTUAL_W / 2;
-    var cy = ADEPT.Config.VIRTUAL_H / 2;
     var modeName = game.mode ? game.mode.name : '';
     var t = game.modeIntroTimer || 0;
 
@@ -480,34 +542,66 @@ ADEPT.HUD.prototype.renderIntro = function(ctx, game) {
     ctx.fillStyle = 'rgba(8, 12, 20, ' + (alpha * 0.9) + ')';
     ctx.fillRect(0, 0, ADEPT.Config.VIRTUAL_W, ADEPT.Config.VIRTUAL_H);
 
-    // Color glow behind title
+    // Mode name — big and centered near top
+    var titleY = 30;
     ctx.fillStyle = bgBase + (alpha * 0.25) + ')';
     var tw = ADEPT.BitmapFont.measure(modeName, 8);
     var tx = Math.round(cx - tw / 2);
-    ctx.fillRect(tx - 12, cy - 54, tw + 24, 24);
+    ctx.fillRect(tx - 12, titleY - 4, tw + 24, 24);
 
-    // Mode name — big and centered
     if (alpha > 0.1) {
-        this.drawText(ctx, modeName, tx, cy - 50, col, 8);
+        this.drawText(ctx, modeName, tx, titleY, col, 8);
     }
 
     // Stage label
     if (t > 0.15) {
         if (game.mode && game.mode.stage === 4) {
-            this.drawTextCentered(ctx, 'STAGE IV', cy - 32, '#e040c0', 5);
+            this.drawTextCentered(ctx, 'STAGE IV', titleY + 20, '#e040c0', 5);
         } else {
-            this.drawTextCentered(ctx, 'STAGE I', cy - 32, '#808890', 5);
+            this.drawTextCentered(ctx, 'STAGE I', titleY + 20, '#808890', 5);
         }
     }
 
-    // Mode-specific instructions
+    // Narrative text — builds the story across modes
+    if (t > 0.2) {
+        ctx.fillStyle = '#304060';
+        ctx.fillRect(cx - 70, titleY + 34, 140, 1);
+
+        var ny = titleY + 44;
+        if (modeName === 'SYSTEMIC CHEMO') {
+            this.drawTextCentered(ctx, 'YOU DISCOVER THE CROWN OF', ny, '#808890', 5);
+            this.drawTextCentered(ctx, 'THORNS IS WEAK AGAINST A', ny + 12, '#808890', 5);
+            this.drawTextCentered(ctx, 'CHEMICAL. USE IT TO KILL THE', ny + 24, '#808890', 5);
+            this.drawTextCentered(ctx, 'INVADER, BUT BEWARE', ny + 36, '#808890', 5);
+            this.drawTextCentered(ctx, 'THE SIDE EFFECTS!', ny + 48, '#e0e040', 5);
+        } else if (modeName === 'ADC') {
+            this.drawTextCentered(ctx, 'THE CHEMO WAS EFFECTIVE BUT', ny, '#808890', 5);
+            this.drawTextCentered(ctx, 'KILLED INDISCRIMINATELY, AT', ny + 12, '#808890', 5);
+            this.drawTextCentered(ctx, 'GREAT COST TO THE LOCALS.', ny + 24, '#808890', 5);
+            this.drawTextCentered(ctx, 'BY ADDING TARGETING, SPARE', ny + 36, '#40e0c0', 5);
+            this.drawTextCentered(ctx, 'THE LOCALS!', ny + 48, '#40e0c0', 5);
+        } else if (modeName === 'ADEPT') {
+            this.drawTextCentered(ctx, 'THE ADC WAS MORE PRECISE BUT', ny, '#808890', 5);
+            this.drawTextCentered(ctx, 'STILL HARMED THE LOCALS.', ny + 12, '#808890', 5);
+            this.drawTextCentered(ctx, 'BY SPLITTING TARGETING FROM', ny + 24, '#808890', 5);
+            this.drawTextCentered(ctx, 'PAYLOAD, SAVE THE LOCALS', ny + 36, '#40e0c0', 5);
+            this.drawTextCentered(ctx, 'ONCE AND FOR ALL!', ny + 48, '#e0e040', 5);
+        }
+    }
+
+    // Mode-specific controls
     if (t > 0.3) {
+        var iy = titleY + 108;
+        ctx.fillStyle = '#304060';
+        ctx.fillRect(cx - 50, iy - 6, 100, 1);
+
         if (modeName === 'ADEPT') {
-            this.drawTextCentered(ctx, '[SPACE] CHARGE ANTIBODY-ENZYME', cy - 12, '#a040e0', 5);
-            this.drawTextCentered(ctx, 'WAIT FOR OFF-TARGET TO CLEAR', cy + 2, '#e0a040', 5);
-            this.drawTextCentered(ctx, '[SPACE] CHARGE PRODRUG', cy + 16, '#ff4040', 5);
+            this.drawTextCentered(ctx, '[SPACE] CHARGE ANTIBODY-ENZYME', iy, '#a040e0', 5);
+            this.drawTextCentered(ctx, 'WAIT FOR OFF-TARGET TO CLEAR', iy + 14, '#e0a040', 5);
+            this.drawTextCentered(ctx, '[SPACE] CHARGE PRODRUG', iy + 28, '#ff4040', 5);
         } else {
-            this.drawTextCentered(ctx, '[HOLD SPACE] CHARGE  [RELEASE] DEPLOY', cy - 6, '#505060', 5);
+            this.drawTextCentered(ctx, '[HOLD SPACE] CHARGE', iy + 6, '#505060', 5);
+            this.drawTextCentered(ctx, '[RELEASE] DEPLOY', iy + 20, '#505060', 5);
         }
     }
 
@@ -515,7 +609,7 @@ ADEPT.HUD.prototype.renderIntro = function(ctx, game) {
     if (t > 0.6) {
         var blink = Math.sin(Date.now() / 1000 * 3) > 0;
         if (blink) {
-            this.drawTextCentered(ctx, 'PRESS ANY KEY', cy + 42, '#e0e040', 5);
+            this.drawTextCentered(ctx, 'PRESS ANY KEY', titleY + 166, '#e0e040', 5);
         }
     }
 };

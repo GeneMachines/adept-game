@@ -6,7 +6,7 @@ ADEPT.Game = function(canvas) {
     this.input = new ADEPT.Input(canvas);
     this.hud = new ADEPT.HUD();
 
-    this.state = 'TITLE'; // TITLE, MENU, STAGE_SELECT, LAB_BENCH, HOW_TO_PLAY, MODE_INTRO, PLAYING, GAME_OVER, RESULTS
+    this.state = 'TITLE'; // TITLE, NARRATIVE, MENU, STAGE_SELECT, LAB_BENCH, HOW_TO_PLAY, MODE_INTRO, PLAYING, GAME_OVER, RESULTS
     this.mode = null;
     this.entities = [];
     this.tumor = null;
@@ -64,7 +64,14 @@ ADEPT.Game.prototype.update = function(dt) {
     switch (this.state) {
         case 'TITLE':
             if (this.input.consumeAnyKey()) {
-                this.startMode(0, 1); // Jump straight into chemo
+                this.state = 'NARRATIVE';
+            }
+            if (this.input.chargeReleased) this.input.consumeCharge();
+            break;
+
+        case 'NARRATIVE':
+            if (this.input.consumeAnyKey()) {
+                this.startMode(0, 1); // Into chemo after narrative
             }
             if (this.input.chargeReleased) this.input.consumeCharge();
             break;
@@ -206,7 +213,7 @@ ADEPT.Game.prototype.update = function(dt) {
 ADEPT.Game.prototype.render = function(dt) {
     this.renderer.clear();
 
-    if (this.state === 'TITLE' || this.state === 'MENU' || this.state === 'STAGE_SELECT' || this.state === 'LAB_BENCH' || this.state === 'HOW_TO_PLAY' || this.state === 'RESULTS' || this.state === 'GAME_OVER') {
+    if (this.state === 'TITLE' || this.state === 'NARRATIVE' || this.state === 'MENU' || this.state === 'STAGE_SELECT' || this.state === 'LAB_BENCH' || this.state === 'HOW_TO_PLAY' || this.state === 'RESULTS' || this.state === 'GAME_OVER') {
         this.hud.render(this);
         this.renderer.present();
         return;
