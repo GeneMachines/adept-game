@@ -8,6 +8,7 @@ ADEPT.Input = function(canvas) {
     this.chargeReleased = false;
     this.chargeValue = 0;
     this.phase2Triggered = false;
+    this.prodrugToggled = false;
     this.anyKey = false;
     this.selectedOption = -1;
     this.escPressed = false;
@@ -167,9 +168,15 @@ ADEPT.Input.prototype.setupHTMLButtons = function() {
         }
     });
 
-    // PRODRUG toggle — no action (charge deploys prodrug in phase 2/4)
+    // PRODRUG toggle — switch back to prodrug mode (from enzyme mode)
     this.btnProdrug.addEventListener('click', function(e) {
         e.preventDefault();
+        var game = ADEPT.gameInstance;
+        if (game && game.mode && game.mode.phase === 1 &&
+            game.mode.aeDoses > 0) {
+            self.prodrugToggled = true;
+            self.anyKey = true;
+        }
     });
 
     // BACK button — ESC
@@ -342,6 +349,12 @@ ADEPT.Input.prototype.consumeCharge = function() {
 ADEPT.Input.prototype.consumePhase2 = function() {
     var val = this.phase2Triggered;
     this.phase2Triggered = false;
+    return val;
+};
+
+ADEPT.Input.prototype.consumeProdrugToggle = function() {
+    var val = this.prodrugToggled;
+    this.prodrugToggled = false;
     return val;
 };
 

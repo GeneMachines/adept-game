@@ -23,7 +23,10 @@ ADEPT.ModeADEPT.prototype.update = function(dt, game) {
 
     if (this.phase === 1) {
         // Phase 1: deploy AB-enzyme (can do multiple doses)
-        if (game.input.chargeReleased) {
+        // Toggle back to prodrug mode if player already deployed enzyme
+        if (game.input.consumeProdrugToggle() && this.aeDoses > 0) {
+            this.phase = 2;
+        } else if (game.input.chargeReleased) {
             var charge = game.input.consumeCharge();
             if (charge > 0.05) {
                 this.deployAntibodyEnzyme(charge, game);
