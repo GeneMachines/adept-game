@@ -21,47 +21,54 @@
     <meta name="twitter:description" content="Outsmart the Crown of Thorns! An educational retro arcade game about cancer drug delivery.">
     <meta name="twitter:image" content="https://genemachines.github.io/adept-game/og-preview.jpg">
 
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=37">
 </head>
 <body>
-    <canvas id="game-canvas"></canvas>
+    <div id="game-wrapper">
+        <canvas id="game-canvas"></canvas>
+        <div id="touch-controls">
+            <button class="touch-btn btn-back" id="btn-back">BACK</button>
+            <button class="touch-btn" id="btn-charge">HOLD</button>
+            <button class="touch-btn btn-toggle hidden" id="btn-action">ENZYME</button>
+        </div>
+    </div>
 
     <!-- Engine -->
-    <script src="js/engine/physics.js?v=36"></script>
-    <script src="js/engine/pk.js?v=36"></script>
-    <script src="js/engine/input.js?v=36"></script>
-    <script src="js/engine/scoring.js?v=36"></script>
-    <script src="js/debug-panel.js?v=36"></script>
+    <script src="js/engine/physics.js?v=37"></script>
+    <script src="js/engine/pk.js?v=37"></script>
+    <script src="js/engine/input.js?v=37"></script>
+    <script src="js/engine/scoring.js?v=37"></script>
+    <script src="js/debug-panel.js?v=37"></script>
 
     <!-- Entities -->
-    <script src="js/entities/entity.js?v=36"></script>
-    <script src="js/entities/molecule.js?v=36"></script>
-    <script src="js/entities/cuttlefish.js?v=36"></script>
-    <script src="js/entities/tumor.js?v=36"></script>
-    <script src="js/entities/chemo.js?v=36"></script>
-    <script src="js/entities/adc.js?v=36"></script>
-    <script src="js/entities/antibody-enzyme.js?v=36"></script>
-    <script src="js/entities/prodrug.js?v=36"></script>
-    <script src="js/entities/active-drug.js?v=36"></script>
+    <script src="js/entities/entity.js?v=37"></script>
+    <script src="js/entities/molecule.js?v=37"></script>
+    <script src="js/entities/cuttlefish.js?v=37"></script>
+    <script src="js/entities/tumor.js?v=37"></script>
+    <script src="js/entities/chemo.js?v=37"></script>
+    <script src="js/entities/adc.js?v=37"></script>
+    <script src="js/entities/antibody-enzyme.js?v=37"></script>
+    <script src="js/entities/prodrug.js?v=37"></script>
+    <script src="js/entities/active-drug.js?v=37"></script>
 
     <!-- Config -->
-    <script src="js/config/text.js?v=36"></script>
+    <script src="js/config/text.js?v=37"></script>
 
     <!-- Rendering -->
-    <script src="js/rendering/sprites.js?v=36"></script>
-    <script src="js/rendering/particles.js?v=36"></script>
-    <script src="js/rendering/renderer.js?v=36"></script>
-    <script src="js/rendering/bitmap-font.js?v=36"></script>
-    <script src="js/rendering/hud.js?v=36"></script>
+    <script src="js/rendering/sprites.js?v=37"></script>
+    <script src="js/rendering/particles.js?v=37"></script>
+    <script src="js/rendering/renderer.js?v=37"></script>
+    <script src="js/rendering/bitmap-font.js?v=37"></script>
+    <script src="js/rendering/hud.js?v=37"></script>
 
     <!-- Modes -->
-    <script src="js/modes/mode-base.js?v=36"></script>
-    <script src="js/modes/mode-chemo.js?v=36"></script>
-    <script src="js/modes/mode-adc.js?v=36"></script>
-    <script src="js/modes/mode-adept.js?v=36"></script>
+    <script src="js/modes/mode-base.js?v=37"></script>
+    <script src="js/modes/mode-chemo.js?v=37"></script>
+    <script src="js/modes/mode-adc.js?v=37"></script>
+    <script src="js/modes/mode-adept.js?v=37"></script>
 
     <!-- Game Loop -->
-    <script src="js/engine/game.js?v=36"></script>
-    <script src="js/main.js?v=36"></script>
+    <script src="js/engine/game.js?v=37"></script>
+    <script src="js/main.js?v=37"></script>
 </body>
 </html>

@@ -85,14 +85,22 @@ ADEPT GAME - TODO
     - Open Graph + Twitter Card meta tags for link preview thumbnails
     - Gameplay screenshot (og-preview.jpg) for rich sharing cards
 
-[ ] RESULTS INFO CONTENT
-    - Fill in real educational facts and literature references for each mode
-    - chemo, ADC, and ADEPT sections in text.js → resultsInfo
+[x] RESULTS INFO CONTENT
+    - Real educational facts for all 3 modes with color-coded emphasis
+    - Chemo: targets universal machinery, 99.9999999999% kill needed, 90% healthy kill is fatal
+    - ADC: <1% of dose reaches tumour, remainder turned over in healthy tissue
+    - ADEPT: pretargeting spares healthy tissue, enzyme activates prodrug locally, uncapped DAR
+    - Reference: Letai and de Thé, Nat. Rev. Cancer 25, 209-218 (2025)
 
-[ ] TOUCH CONTROLS
-    - Tap mode cards on menu to select
-    - Tap-back gesture for ESC on overlay screens
-    - Mobile-friendly input for non-keyboard players
+[x] TOUCH CONTROLS
+    - HTML buttons below canvas (BACK, HOLD, MORE ENZYME)
+    - Canvas tap hit-testing for menu cards, stage select, results options
+    - ADEPT phase-aware: MORE ENZYME only in Phase 2 when doses remain
+    - Mobile detection via ontouchstart / maxTouchPoints
+    - Buttons hidden on non-applicable screens (title, narrative, etc.)
+
+[ ] SCROLLING TEXT → RPG STYLE
+    - Change scrolling text to RPG-style one line at a time
 
 [ ] SOUND EFFECTS
     - Basic arcade sound effects for key actions

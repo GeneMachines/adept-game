@@ -16,10 +16,83 @@ body {
     font-family: 'Press Start 2P', monospace;
 }
 
+#game-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 #game-canvas {
     display: block;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
     cursor: pointer;
     touch-action: none;
+}
+
+/* ── Mobile touch controls bar ────────────────────── */
+#touch-controls {
+    display: none;
+    width: 100%;
+    padding: 10px 4px 6px 4px;
+    gap: 8px;
+    justify-content: center;
+}
+
+/* Show on touch devices */
+.has-touch #touch-controls {
+    display: flex;
+}
+
+.touch-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: #506080;
+    background: rgba(10, 10, 30, 0.8);
+    border: 1px solid #303850;
+    padding: 14px 0;
+    flex: 1;
+    max-width: 160px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    transition: none;
+}
+
+.touch-btn:active,
+.touch-btn.active {
+    background: rgba(40, 60, 100, 0.8);
+    border-color: #6080c0;
+    color: #e0e040;
+}
+
+.touch-btn.btn-back {
+    max-width: 80px;
+    padding: 14px 0;
+    font-size: 8px;
+    color: #404060;
+    border-color: #252540;
+}
+
+.touch-btn.btn-back:active {
+    color: #808090;
+    border-color: #505070;
+    background: rgba(30, 30, 50, 0.8);
+}
+
+/* ADEPT toggle button — highlighted when selected */
+.touch-btn.btn-toggle {
+    position: relative;
+}
+
+.touch-btn.btn-toggle.selected {
+    border-color: #a040e0;
+    color: #a040e0;
+}
+
+/* Hidden by default, shown by JS when relevant */
+.touch-btn.hidden {
+    display: none;
 }

@@ -221,69 +221,6 @@ ADEPT.HUD.prototype.render = function(game) {
         }
     }
 
-    // Mobile touch buttons overlaid on lower tank
-    if (game.input.isMobile) {
-        this.renderTouchButtons(ctx, game);
-    }
-};
-
-// Semi-transparent touch buttons overlaid on lower tank during PLAYING
-ADEPT.HUD.prototype.renderTouchButtons = function(ctx, game) {
-    var z = game.input.touchZones;
-    var charging = game.input.charging;
-
-    // ── CHARGE button (left) ────────────────────────────
-    var cz = z.charge;
-    ctx.fillStyle = charging ? 'rgba(40, 60, 100, 0.6)' : 'rgba(10, 10, 30, 0.4)';
-    ctx.fillRect(cz.x, cz.y, cz.w, cz.h);
-    ctx.fillStyle = charging ? '#6080c0' : '#303850';
-    ctx.fillRect(cz.x, cz.y, cz.w, 1);
-    ctx.fillRect(cz.x, cz.y + cz.h - 1, cz.w, 1);
-    ctx.fillRect(cz.x, cz.y, 1, cz.h);
-    ctx.fillRect(cz.x + cz.w - 1, cz.y, 1, cz.h);
-    var chargeLabel = charging ? 'RELEASE' : 'HOLD';
-    var clW = ADEPT.BitmapFont.measure(chargeLabel, 5);
-    var clX = Math.round(cz.x + cz.w / 2 - clW / 2);
-    var clY = Math.round(cz.y + cz.h / 2 - 3);
-    this.drawText(ctx, chargeLabel, clX, clY, charging ? '#e0e040' : '#506080', 5);
-
-    // ── ACTION button (right) — context-sensitive ───────
-    var az = z.action;
-    var actionLabel = '';
-    if (game.mode && game.mode.name === 'ADEPT') {
-        if (game.mode.phase === 1) {
-            actionLabel = 'ENZYME';
-        } else if (game.mode.phase === 2) {
-            actionLabel = 'PRODRUG';
-        } else if (game.mode.phase === 4) {
-            actionLabel = 'MORE';
-        }
-    }
-    // Only show action button when there's an action to take
-    if (actionLabel) {
-        ctx.fillStyle = 'rgba(10, 10, 30, 0.4)';
-        ctx.fillRect(az.x, az.y, az.w, az.h);
-        ctx.fillStyle = '#303850';
-        ctx.fillRect(az.x, az.y, az.w, 1);
-        ctx.fillRect(az.x, az.y + az.h - 1, az.w, 1);
-        ctx.fillRect(az.x, az.y, 1, az.h);
-        ctx.fillRect(az.x + az.w - 1, az.y, 1, az.h);
-        var alW = ADEPT.BitmapFont.measure(actionLabel, 5);
-        var alX = Math.round(az.x + az.w / 2 - alW / 2);
-        var alY = Math.round(az.y + az.h / 2 - 3);
-        this.drawText(ctx, actionLabel, alX, alY, '#506080', 5);
-    }
-
-    // ── BACK button (top center, near ESC hint) ─────────
-    var ez = z.esc;
-    ctx.fillStyle = 'rgba(10, 10, 30, 0.3)';
-    ctx.fillRect(ez.x, ez.y, ez.w, ez.h);
-    ctx.fillStyle = '#252540';
-    ctx.fillRect(ez.x, ez.y + ez.h - 1, ez.w, 1);
-    var backLabel = 'BACK';
-    var blW = ADEPT.BitmapFont.measure(backLabel, 5);
-    var blX = Math.round(ez.x + ez.w / 2 - blW / 2);
-    this.drawText(ctx, backLabel, blX, 7, '#303850', 5);
 };
 
 ADEPT.HUD.prototype.renderTitle = function(ctx) {

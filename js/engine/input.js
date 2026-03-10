@@ -20,15 +20,9 @@ ADEPT.Input = function(canvas) {
     this.isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     ADEPT.Input.isMobile = this.isMobile;
     this.gameState = '';
-    this.activeTouching = false; // true while a finger is down (for button highlight)
 
-    // Touch button regions (virtual coordinates)
-    // These match the rendered positions in hud.js
+    // Touch button regions for canvas taps (virtual coordinates)
     this.touchZones = {
-        // PLAYING state buttons
-        charge:  { x: 8,   y: 168, w: 116, h: 32 },
-        action:  { x: 132, y: 168, w: 116, h: 32 },
-        esc:     { x: 90,  y: 0,   w: 76,  h: 20 },
         // MENU state cards (match renderMenu: startY=48, gap=42, cardH=34)
         menuCard0: { x: 18, y: 48,  w: 220, h: 34 },
         menuCard1: { x: 18, y: 90,  w: 220, h: 34 },
@@ -78,18 +72,17 @@ ADEPT.Input = function(canvas) {
         }
     });
 
-    // ── Touch ────────────────────────────────────────────────
+    // ── Canvas touch (menus, tap-to-advance) ─────────────────
     canvas.addEventListener('touchstart', function(e) {
         e.preventDefault();
         var touch = e.touches[0];
         var v = self.screenToVirtual(touch.clientX, touch.clientY);
-        self.activeTouching = true;
-        self.handleTouchStart(v.x, v.y);
+        self.handleCanvasTouch(v.x, v.y);
     });
 
     canvas.addEventListener('touchend', function(e) {
         e.preventDefault();
-        self.activeTouching = false;
+        // If charging via canvas tap (non-PLAYING states), release
         if (self.charging) {
             self.chargeReleased = true;
             self.chargeValue = self.chargeTime / self.maxCharge;
@@ -100,6 +93,12 @@ ADEPT.Input = function(canvas) {
     canvas.addEventListener('touchmove', function(e) {
         e.preventDefault();
     });
+
+    // ── HTML touch buttons (below canvas) ────────────────────
+    if (this.isMobile) {
+        document.body.classList.add('has-touch');
+        this.setupHTMLButtons();
+    }
 };
 
 // Convert screen touch coordinates to virtual 256×240 space
@@ -119,32 +118,120 @@ ADEPT.Input.prototype.hitTest = function(vx, vy, zone) {
            vy >= zone.y && vy <= zone.y + zone.h;
 };
 
-// Called each frame from game.js to keep touch handler state-aware
+// Called each frame from game.js
 ADEPT.Input.prototype.setGameState = function(state) {
     this.gameState = state;
+    if (this.isMobile) {
+        this.updateHTMLButtons(state);
+    }
 };
 
-// State-aware touch dispatch
-ADEPT.Input.prototype.handleTouchStart = function(vx, vy) {
+// ── HTML button wiring ──────────────────────────────────────
+ADEPT.Input.prototype.setupHTMLButtons = function() {
+    var self = this;
+    this.btnCharge = document.getElementById('btn-charge');
+    this.btnAction = document.getElementById('btn-action');
+    this.btnBack   = document.getElementById('btn-back');
+
+    // CHARGE button — hold to charge, release to deploy
+    this.btnCharge.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        self.charging = true;
+        self.btnCharge.classList.add('active');
+        self.btnCharge.textContent = 'RELEASE';
+    });
+    this.btnCharge.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (self.charging) {
+            self.chargeReleased = true;
+            self.chargeValue = self.chargeTime / self.maxCharge;
+            self.charging = false;
+        }
+        self.btnCharge.classList.remove('active');
+        self.btnCharge.textContent = 'HOLD';
+    });
+
+    // ACTION button — ADEPT enzyme/prodrug toggle
+    // In ADEPT phase 2: tap toggles between "next charge = enzyme" vs "next charge = prodrug"
+    // Default is prodrug (charge+release in phase 2 deploys prodrug).
+    // Tapping ENZYME fires phase2Triggered which sets phase back to 1 (enzyme deploy mode).
+    this.btnAction.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        self.phase2Triggered = true;
+        self.anyKey = true;
+    });
+
+    // BACK button — ESC
+    this.btnBack.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        self.escPressed = true;
+        self.selectedOption = 12;
+        self.anyKey = true;
+    });
+};
+
+// Update HTML button visibility/labels based on game state
+ADEPT.Input.prototype.updateHTMLButtons = function(state) {
+    if (!this.btnCharge) return;
+
+    var controls = document.getElementById('touch-controls');
+    var btnAction = this.btnAction;
+
+    if (state === 'PLAYING') {
+        controls.style.display = 'flex';
+        this.btnBack.style.display = '';
+        this.btnCharge.style.display = '';
+
+        // Show action button only in ADEPT mode
+        var game = ADEPT.gameInstance;
+        if (game && game.mode && game.mode.name === 'ADEPT') {
+            btnAction.classList.remove('hidden');
+            if (game.mode.phase === 1) {
+                btnAction.textContent = 'DEPLOY AE';
+                btnAction.style.display = 'none'; // Phase 1 uses charge button
+            } else if (game.mode.phase === 2) {
+                // In phase 2: charge = prodrug, this button = switch to more enzyme
+                btnAction.style.display = '';
+                if (game.mode.aeDoses < game.mode.maxAEDoses) {
+                    btnAction.textContent = 'MORE ENZYME';
+                } else {
+                    btnAction.textContent = 'MAX ENZYME';
+                    btnAction.style.display = 'none';
+                }
+            } else if (game.mode.phase === 4) {
+                btnAction.style.display = 'none'; // Phase 4 just uses charge
+            }
+        } else {
+            btnAction.classList.add('hidden');
+            btnAction.style.display = 'none';
+        }
+    } else {
+        // Non-playing states: hide gameplay buttons, show controls bar for back only
+        this.btnCharge.style.display = 'none';
+        btnAction.style.display = 'none';
+
+        // Show back button on screens that support ESC
+        var showBack = (state === 'MENU' || state === 'STAGE_SELECT' ||
+                        state === 'LAB_BENCH' || state === 'HOW_TO_PLAY' ||
+                        state === 'RESULTS_INFO');
+        if (showBack) {
+            controls.style.display = 'flex';
+            this.btnBack.style.display = '';
+        } else {
+            controls.style.display = 'none';
+        }
+    }
+};
+
+// Canvas touch — handles menu taps and tap-to-advance
+ADEPT.Input.prototype.handleCanvasTouch = function(vx, vy) {
     var z = this.touchZones;
 
     switch (this.gameState) {
-        case 'PLAYING':
-            if (this.hitTest(vx, vy, z.charge)) {
-                this.charging = true;
-            } else if (this.hitTest(vx, vy, z.action)) {
-                this.phase2Triggered = true;
-                this.anyKey = true;
-            } else if (this.hitTest(vx, vy, z.esc)) {
-                this.escPressed = true;
-                this.selectedOption = 12;
-                this.anyKey = true;
-            } else {
-                // Tap anywhere else = anyKey (useful for skip etc.)
-                this.anyKey = true;
-            }
-            break;
-
         case 'MENU':
             if (this.hitTest(vx, vy, z.menuCard0)) {
                 this.selectedOption = 0;
@@ -171,7 +258,6 @@ ADEPT.Input.prototype.handleTouchStart = function(vx, vy) {
                 this.selectedOption = 1;
                 this.anyKey = true;
             } else {
-                // Tap outside = back (ESC)
                 this.escPressed = true;
                 this.anyKey = true;
             }
@@ -179,8 +265,6 @@ ADEPT.Input.prototype.handleTouchStart = function(vx, vy) {
 
         case 'RESULTS':
             // Hit-test the option buttons at the bottom
-            // These Y positions are approximate — they depend on content height.
-            // Use generous regions covering the bottom option row area.
             if (vy > 160 && vy < 210) {
                 if (vx < 75) {
                     this.selectedOption = 10; // R - retry
@@ -198,13 +282,10 @@ ADEPT.Input.prototype.handleTouchStart = function(vx, vy) {
             break;
 
         case 'LAB_BENCH':
-            // Top half = up, bottom half = down
-            // Left third = ESC, right third = confirm
             if (vx < 60) {
                 this.escPressed = true;
                 this.anyKey = true;
             } else if (vx > 196) {
-                // Confirm (right side tap)
                 this.phase2Triggered = true;
                 this.anyKey = true;
             } else if (vy < 120) {
@@ -218,7 +299,7 @@ ADEPT.Input.prototype.handleTouchStart = function(vx, vy) {
 
         default:
             // TITLE, NARRATIVE, GAME_OVER, ENDING, MODE_INTRO,
-            // RESULTS_INFO, HOW_TO_PLAY — any touch = anyKey
+            // RESULTS_INFO, HOW_TO_PLAY, PLAYING — any canvas touch = anyKey
             this.anyKey = true;
             break;
     }
