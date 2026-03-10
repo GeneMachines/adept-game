@@ -6,7 +6,7 @@ ADEPT.Game = function(canvas) {
     this.input = new ADEPT.Input(canvas);
     this.hud = new ADEPT.HUD();
 
-    this.state = 'TITLE'; // TITLE, MENU, STAGE_SELECT, MODE_INTRO, PLAYING, GAME_OVER, RESULTS
+    this.state = 'TITLE'; // TITLE, MENU, STAGE_SELECT, LAB_BENCH, MODE_INTRO, PLAYING, GAME_OVER, RESULTS
     this.mode = null;
     this.entities = [];
     this.tumor = null;
@@ -15,6 +15,8 @@ ADEPT.Game = function(canvas) {
     this.currentModeIndex = 0;
     this.currentStage = 1; // 1 or 4
     this.gameOverTimer = 0;
+    this.labBenchParams = [];
+    this.labBenchCursor = 0;
 
     this.TICK_RATE = 60;
     this.TICK_MS = 1000 / this.TICK_RATE;
@@ -89,11 +91,42 @@ ADEPT.Game.prototype.update = function(dt) {
                 break;
             }
             var opt = this.input.consumeOption();
-            if (opt === 0) this.startMode(this.currentModeIndex, 1);
+            if (opt === 0) this.setupLabBench(this.currentModeIndex, 1);
             else if (opt === 1 && this.isStageUnlocked(this.currentModeIndex, 4)) {
-                this.startMode(this.currentModeIndex, 4);
+                this.setupLabBench(this.currentModeIndex, 4);
             }
             if (this.input.chargeReleased) this.input.consumeCharge();
+            break;
+
+        case 'LAB_BENCH':
+            if (this.input.consumeEsc()) {
+                this.input.consumeArrow();
+                this.input.consumeAnyKey();
+                this.state = 'STAGE_SELECT';
+                break;
+            }
+            var arrow = this.input.consumeArrow();
+            if (arrow === 'up') {
+                this.labBenchCursor = Math.max(0, this.labBenchCursor - 1);
+            } else if (arrow === 'down') {
+                this.labBenchCursor = Math.min(this.labBenchParams.length - 1, this.labBenchCursor + 1);
+            } else if (arrow === 'left') {
+                var p = this.labBenchParams[this.labBenchCursor];
+                p.value = Math.max(p.min, Math.round((p.value - p.step) * 100) / 100);
+            } else if (arrow === 'right') {
+                var p = this.labBenchParams[this.labBenchCursor];
+                p.value = Math.min(p.max, Math.round((p.value + p.step) * 100) / 100);
+            }
+            var labConfirm = this.input.consumePhase2();
+            if (this.input.chargeReleased) {
+                this.input.consumeCharge();
+                labConfirm = true;
+            }
+            if (labConfirm) {
+                this.applyLabBenchParams();
+                this.startMode(this.currentModeIndex, this.currentStage);
+            }
+            this.input.consumeAnyKey();
             break;
 
         case 'MODE_INTRO':
@@ -163,7 +196,7 @@ ADEPT.Game.prototype.update = function(dt) {
 ADEPT.Game.prototype.render = function(dt) {
     this.renderer.clear();
 
-    if (this.state === 'TITLE' || this.state === 'MENU' || this.state === 'STAGE_SELECT' || this.state === 'RESULTS' || this.state === 'GAME_OVER') {
+    if (this.state === 'TITLE' || this.state === 'MENU' || this.state === 'STAGE_SELECT' || this.state === 'LAB_BENCH' || this.state === 'RESULTS' || this.state === 'GAME_OVER') {
         this.hud.render(this);
         this.renderer.present();
         return;
@@ -200,6 +233,53 @@ ADEPT.Game.prototype.startMode = function(index, stage) {
 
     this.mode.setup(this);
     this.state = 'MODE_INTRO';
+};
+
+ADEPT.Game.prototype.setupLabBench = function(modeIndex, stage) {
+    this.currentModeIndex = modeIndex;
+    this.currentStage = stage || 1;
+    this.labBenchCursor = 0;
+
+    var paramDefs = {
+        0: [
+            { name: 'POTENCY', obj: 'Balance', key: 'chemo_tumor_mult', min: 2.0, max: 6.0, step: 0.5, def: ADEPT.Balance.chemo_tumor_mult },
+            { name: 'CLEARANCE RATE', obj: 'PK_HL', key: 'chemo_free', min: 3.0, max: 12.0, step: 1.0, def: ADEPT.PK.HALF_LIFE.chemo_free },
+        ],
+        1: [
+            { name: 'DRUG LOADING', obj: 'Balance', key: 'adc_payload', min: 2, max: 8, step: 1, def: ADEPT.Balance.adc_payload },
+            { name: 'RELEASE RATE', obj: 'PK', key: 'ADC_LEAK_RATE', min: 0.10, max: 0.50, step: 0.05, def: ADEPT.PK.ADC_LEAK_RATE },
+        ],
+        2: [
+            { name: 'ENZYME RADIUS', obj: 'Balance', key: 'ae_catalytic_radius', min: 8, max: 24, step: 2, def: ADEPT.Balance.ae_catalytic_radius },
+            { name: 'PRODRUG POTENCY', obj: 'Balance', key: 'prodrug_potency', min: 0.4, max: 2.0, step: 0.2, def: ADEPT.Balance.prodrug_potency },
+        ],
+    };
+
+    this.labBenchParams = [];
+    var defs = paramDefs[modeIndex] || [];
+    for (var i = 0; i < defs.length; i++) {
+        var d = defs[i];
+        this.labBenchParams.push({
+            name: d.name, obj: d.obj, key: d.key,
+            min: d.min, max: d.max, step: d.step,
+            def: d.def, value: d.def,
+        });
+    }
+
+    this.state = 'LAB_BENCH';
+};
+
+ADEPT.Game.prototype.applyLabBenchParams = function() {
+    for (var i = 0; i < this.labBenchParams.length; i++) {
+        var p = this.labBenchParams[i];
+        if (p.obj === 'Balance') {
+            ADEPT.Balance[p.key] = p.value;
+        } else if (p.obj === 'PK_HL') {
+            ADEPT.PK.HALF_LIFE[p.key] = p.value;
+        } else if (p.obj === 'PK') {
+            ADEPT.PK[p.key] = p.value;
+        }
+    }
 };
 
 ADEPT.Game.prototype.abandonRound = function() {

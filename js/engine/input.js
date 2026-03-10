@@ -11,6 +11,10 @@ ADEPT.Input = function(canvas) {
     this.anyKey = false;
     this.selectedOption = -1;
     this.escPressed = false;
+    this.arrowUp = false;
+    this.arrowDown = false;
+    this.arrowLeft = false;
+    this.arrowRight = false;
 
     var self = this;
 
@@ -30,6 +34,10 @@ ADEPT.Input = function(canvas) {
         if (e.code === 'KeyN') self.selectedOption = 11; // next
         if (e.code === 'KeyM') self.selectedOption = 12; // menu
         if (e.code === 'Escape') { self.escPressed = true; self.selectedOption = 12; }
+        if (e.code === 'ArrowUp') { e.preventDefault(); self.arrowUp = true; }
+        if (e.code === 'ArrowDown') { e.preventDefault(); self.arrowDown = true; }
+        if (e.code === 'ArrowLeft') { e.preventDefault(); self.arrowLeft = true; }
+        if (e.code === 'ArrowRight') { e.preventDefault(); self.arrowRight = true; }
         self.anyKey = true;
     });
 
@@ -106,6 +114,14 @@ ADEPT.Input.prototype.consumeOption = function() {
     var val = this.selectedOption;
     this.selectedOption = -1;
     return val;
+};
+
+ADEPT.Input.prototype.consumeArrow = function() {
+    if (this.arrowUp) { this.arrowUp = false; return 'up'; }
+    if (this.arrowDown) { this.arrowDown = false; return 'down'; }
+    if (this.arrowLeft) { this.arrowLeft = false; return 'left'; }
+    if (this.arrowRight) { this.arrowRight = false; return 'right'; }
+    return null;
 };
 
 ADEPT.Input.prototype.getNormalizedCharge = function() {

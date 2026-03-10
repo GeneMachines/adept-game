@@ -31,6 +31,11 @@ ADEPT.HUD.prototype.render = function(game) {
         return;
     }
 
+    if (game.state === 'LAB_BENCH') {
+        this.renderLabBench(ctx, game);
+        return;
+    }
+
     if (game.state === 'GAME_OVER') {
         this.renderGameOver(ctx, game);
         return;
@@ -320,6 +325,90 @@ ADEPT.HUD.prototype.renderStageSelect = function(ctx, game) {
 
     this.drawTextCentered(ctx, unlocked ? 'PRESS 1 OR 2' : 'PRESS 1', 182, '#808890', 5);
     this.drawTextCentered(ctx, '[ESC] BACK', 194, '#404860', 5);
+};
+
+ADEPT.HUD.prototype.renderLabBench = function(ctx, game) {
+    var cx = ADEPT.Config.VIRTUAL_W / 2;
+    var modeNames = ['SYSTEMIC CHEMO', 'ADC', 'ADEPT'];
+    var modeColors = ['#ff4040', '#40e040', '#a040e0'];
+    var name = modeNames[game.currentModeIndex] || '';
+    var col = modeColors[game.currentModeIndex] || '#f0f0f0';
+    var stageStr = game.currentStage === 4 ? 'STAGE IV' : 'STAGE I';
+
+    // Header
+    this.drawTextCentered(ctx, 'L A B   B E N C H', 20, '#40e0c0', 7);
+    this.drawTextCentered(ctx, name + ' - ' + stageStr, 38, col, 5);
+
+    ctx.fillStyle = '#304060';
+    ctx.fillRect(cx - 70, 48, 140, 1);
+
+    this.drawTextCentered(ctx, 'TWEAK PARAMETERS BEFORE BATTLE', 56, '#606080', 5);
+
+    ctx.fillStyle = '#304060';
+    ctx.fillRect(cx - 70, 66, 140, 1);
+
+    // Parameter rows
+    var params = game.labBenchParams;
+    var cursor = game.labBenchCursor;
+    var startY = 84;
+    var rowH = 24;
+
+    for (var i = 0; i < params.length; i++) {
+        var p = params[i];
+        var y = startY + i * rowH;
+        var selected = (i === cursor);
+        var rowCol = selected ? col : '#606080';
+
+        // Cursor indicator
+        if (selected) {
+            this.drawText(ctx, '>', 12, y, col, 5);
+        }
+
+        // Parameter name
+        this.drawText(ctx, p.name, 22, y, rowCol, 5);
+
+        // Bar visualization
+        var barX = 128;
+        var barW = 54;
+        var barH = 5;
+        var fraction = (p.value - p.min) / (p.max - p.min);
+
+        // Bar background
+        ctx.fillStyle = '#1a1a2a';
+        ctx.fillRect(barX, y, barW, barH);
+
+        // Bar fill
+        ctx.fillStyle = selected ? col : '#404060';
+        ctx.fillRect(barX, y, Math.round(barW * fraction), barH);
+
+        // Bar border
+        ctx.fillStyle = '#404060';
+        ctx.fillRect(barX - 1, y - 1, barW + 2, 1);
+        ctx.fillRect(barX - 1, y + barH, barW + 2, 1);
+        ctx.fillRect(barX - 1, y, 1, barH);
+        ctx.fillRect(barX + barW, y, 1, barH);
+
+        // Position marker (thin line at current value)
+        var markerX = barX + Math.round(barW * fraction);
+        ctx.fillStyle = '#f0f0f0';
+        ctx.fillRect(markerX, y - 1, 1, barH + 2);
+
+        // Value text
+        var decimals = 0;
+        if (p.step < 1) decimals = 1;
+        if (p.step < 0.1) decimals = 2;
+        var valStr = p.value.toFixed(decimals);
+        this.drawText(ctx, valStr, barX + barW + 6, y, selected ? '#f0f0f0' : '#808080', 5);
+    }
+
+    // Bottom section
+    var bottomY = startY + params.length * rowH + 16;
+    ctx.fillStyle = '#304060';
+    ctx.fillRect(cx - 70, bottomY, 140, 1);
+
+    this.drawTextCentered(ctx, '[UP/DOWN] SELECT', bottomY + 12, '#606080', 5);
+    this.drawTextCentered(ctx, '[LEFT/RIGHT] ADJUST', bottomY + 24, '#606080', 5);
+    this.drawTextCentered(ctx, '[SPACE] START  [ESC] BACK', bottomY + 40, '#404860', 5);
 };
 
 ADEPT.HUD.prototype.renderIntro = function(ctx, game) {
