@@ -36,6 +36,11 @@ ADEPT.HUD.prototype.render = function(game) {
         return;
     }
 
+    if (game.state === 'HOW_TO_PLAY') {
+        this.renderHowToPlay(ctx);
+        return;
+    }
+
     if (game.state === 'GAME_OVER') {
         this.renderGameOver(ctx, game);
         return;
@@ -282,8 +287,11 @@ ADEPT.HUD.prototype.renderMenu = function(ctx) {
     ctx.fillStyle = '#304060';
     ctx.fillRect(cx - 70, startY + 3 * gap - 2, 140, 1);
 
-    this.drawTextCentered(ctx, 'PRESS 1, 2 OR 3', startY + 3 * gap + 8, '#808890', 5);
-    this.drawTextCentered(ctx, '[ESC] BACK', startY + 3 * gap + 20, '#404860', 5);
+    this.drawTextCentered(ctx, '[L] LAB BENCH', startY + 3 * gap + 10, '#40e0c0', 5);
+    this.drawTextCentered(ctx, '[I] HOW TO PLAY', startY + 3 * gap + 22, '#40e0c0', 5);
+
+    this.drawTextCentered(ctx, 'PRESS 1, 2 OR 3', startY + 3 * gap + 38, '#808890', 5);
+    this.drawTextCentered(ctx, '[ESC] BACK', startY + 3 * gap + 50, '#404860', 5);
 
     // Animated cuttlefish behind menu
     var fishX = cx + Math.sin(t * 0.5) * 40;
@@ -317,7 +325,7 @@ ADEPT.HUD.prototype.renderStageSelect = function(ctx, game) {
         this.drawTextCentered(ctx, 'Metastatic - it spreads!', 154, '#606080', 5);
     } else {
         this.drawTextCentered(ctx, '[2] STAGE IV', 136, '#403040', 7);
-        this.drawTextCentered(ctx, 'Beat Stage I to unlock', 154, '#403040', 5);
+        this.drawTextCentered(ctx, 'Beat all 3 modes to unlock', 154, '#403040', 5);
     }
 
     ctx.fillStyle = '#304060';
@@ -329,39 +337,44 @@ ADEPT.HUD.prototype.renderStageSelect = function(ctx, game) {
 
 ADEPT.HUD.prototype.renderLabBench = function(ctx, game) {
     var cx = ADEPT.Config.VIRTUAL_W / 2;
-    var modeNames = ['SYSTEMIC CHEMO', 'ADC', 'ADEPT'];
-    var modeColors = ['#ff4040', '#40e040', '#a040e0'];
-    var name = modeNames[game.currentModeIndex] || '';
-    var col = modeColors[game.currentModeIndex] || '#f0f0f0';
-    var stageStr = game.currentStage === 4 ? 'STAGE IV' : 'STAGE I';
+    var groupNames = ['SYSTEMIC CHEMO', 'ADC', 'ADEPT'];
+    var groupColors = ['#ff4040', '#40e040', '#a040e0'];
 
     // Header
-    this.drawTextCentered(ctx, 'L A B   B E N C H', 20, '#40e0c0', 7);
-    this.drawTextCentered(ctx, name + ' - ' + stageStr, 38, col, 5);
+    this.drawTextCentered(ctx, 'L A B   B E N C H', 18, '#40e0c0', 7);
 
     ctx.fillStyle = '#304060';
-    ctx.fillRect(cx - 70, 48, 140, 1);
+    ctx.fillRect(cx - 70, 32, 140, 1);
 
-    this.drawTextCentered(ctx, 'TWEAK PARAMETERS BEFORE BATTLE', 56, '#606080', 5);
+    this.drawTextCentered(ctx, 'TWEAK DRUG PARAMETERS', 40, '#606080', 5);
 
     ctx.fillStyle = '#304060';
-    ctx.fillRect(cx - 70, 66, 140, 1);
+    ctx.fillRect(cx - 70, 50, 140, 1);
 
-    // Parameter rows
+    // Parameter rows grouped by mode
     var params = game.labBenchParams;
     var cursor = game.labBenchCursor;
-    var startY = 84;
-    var rowH = 24;
+    var y = 58;
+    var lastGroup = -1;
 
     for (var i = 0; i < params.length; i++) {
         var p = params[i];
-        var y = startY + i * rowH;
+        var gcol = groupColors[p.group];
+
+        // Mode header when group changes
+        if (p.group !== lastGroup) {
+            if (lastGroup !== -1) y += 4;
+            this.drawText(ctx, groupNames[p.group], 14, y, gcol, 5);
+            y += 12;
+            lastGroup = p.group;
+        }
+
         var selected = (i === cursor);
-        var rowCol = selected ? col : '#606080';
+        var rowCol = selected ? gcol : '#606080';
 
         // Cursor indicator
         if (selected) {
-            this.drawText(ctx, '>', 12, y, col, 5);
+            this.drawText(ctx, '>', 12, y, gcol, 5);
         }
 
         // Parameter name
@@ -378,7 +391,7 @@ ADEPT.HUD.prototype.renderLabBench = function(ctx, game) {
         ctx.fillRect(barX, y, barW, barH);
 
         // Bar fill
-        ctx.fillStyle = selected ? col : '#404060';
+        ctx.fillStyle = selected ? gcol : '#404060';
         ctx.fillRect(barX, y, Math.round(barW * fraction), barH);
 
         // Bar border
@@ -388,7 +401,7 @@ ADEPT.HUD.prototype.renderLabBench = function(ctx, game) {
         ctx.fillRect(barX - 1, y, 1, barH);
         ctx.fillRect(barX + barW, y, 1, barH);
 
-        // Position marker (thin line at current value)
+        // Position marker
         var markerX = barX + Math.round(barW * fraction);
         ctx.fillStyle = '#f0f0f0';
         ctx.fillRect(markerX, y - 1, 1, barH + 2);
@@ -399,90 +412,80 @@ ADEPT.HUD.prototype.renderLabBench = function(ctx, game) {
         if (p.step < 0.1) decimals = 2;
         var valStr = p.value.toFixed(decimals);
         this.drawText(ctx, valStr, barX + barW + 6, y, selected ? '#f0f0f0' : '#808080', 5);
+
+        y += 14;
     }
 
     // Bottom section
-    var bottomY = startY + params.length * rowH + 16;
+    y += 8;
     ctx.fillStyle = '#304060';
-    ctx.fillRect(cx - 70, bottomY, 140, 1);
+    ctx.fillRect(cx - 70, y, 140, 1);
 
-    this.drawTextCentered(ctx, '[UP/DOWN] SELECT', bottomY + 12, '#606080', 5);
-    this.drawTextCentered(ctx, '[LEFT/RIGHT] ADJUST', bottomY + 24, '#606080', 5);
-    this.drawTextCentered(ctx, '[SPACE] START  [ESC] BACK', bottomY + 40, '#404860', 5);
+    this.drawTextCentered(ctx, '[UP/DOWN] SELECT', y + 12, '#606080', 5);
+    this.drawTextCentered(ctx, '[LEFT/RIGHT] ADJUST', y + 24, '#606080', 5);
+    this.drawTextCentered(ctx, '[SPACE] SAVE  [ESC] BACK', y + 40, '#404860', 5);
+};
+
+ADEPT.HUD.prototype.renderHowToPlay = function(ctx) {
+    var cx = ADEPT.Config.VIRTUAL_W / 2;
+
+    this.drawTextCentered(ctx, 'H O W   T O   P L A Y', 18, '#40e0c0', 7);
+
+    ctx.fillStyle = '#304060';
+    ctx.fillRect(cx - 70, 34, 140, 1);
+
+    this.drawText(ctx, 'CONTROLS', 14, 42, '#40e0c0', 5);
+    this.drawText(ctx, '[HOLD SPACE] CHARGE DOSE', 14, 54, '#e0e040', 5);
+    this.drawText(ctx, '[RELEASE] DEPLOY INTO TANK', 14, 66, '#e0e040', 5);
+    this.drawText(ctx, 'LONGER CHARGE = BIGGER DOSE', 14, 78, '#808090', 5);
+
+    ctx.fillStyle = '#304060';
+    ctx.fillRect(cx - 70, 92, 140, 1);
+
+    this.drawText(ctx, 'ADEPT MODE', 14, 100, '#a040e0', 5);
+    this.drawText(ctx, '1. [SPACE] DEPLOY AB-ENZYME', 14, 112, '#a040e0', 5);
+    this.drawText(ctx, '2. WAIT FOR OFF-TARGET CLEARING', 14, 124, '#e0a040', 5);
+    this.drawText(ctx, '3. [SPACE] DEPLOY PRODRUG', 14, 136, '#ff4040', 5);
+    this.drawText(ctx, '[E] ADD MORE ENZYME', 14, 148, '#808090', 5);
+
+    ctx.fillStyle = '#304060';
+    ctx.fillRect(cx - 70, 162, 140, 1);
+
+    this.drawText(ctx, 'GOAL', 14, 170, '#40e0c0', 5);
+    this.drawText(ctx, 'KILL THE CROWN OF THORNS', 14, 182, '#808090', 5);
+    this.drawText(ctx, 'PROTECT YOUR CUTTLEFISH', 14, 194, '#808090', 5);
+
+    ctx.fillStyle = '#304060';
+    ctx.fillRect(cx - 70, 208, 140, 1);
+
+    this.drawTextCentered(ctx, '[ESC] BACK', 218, '#404860', 5);
 };
 
 ADEPT.HUD.prototype.renderIntro = function(ctx, game) {
     var cx = ADEPT.Config.VIRTUAL_W / 2;
     var modeName = game.mode ? game.mode.name : '';
-    var desc = game.mode ? game.mode.description : '';
 
     // Dark panel behind text for readability
     ctx.fillStyle = 'rgba(8, 12, 20, 0.85)';
-    ctx.fillRect(8, 20, ADEPT.Config.VIRTUAL_W - 16, 200);
+    ctx.fillRect(8, 40, ADEPT.Config.VIRTUAL_W - 16, 160);
 
-    this.drawTextCentered(ctx, modeName, 30, '#f0f0f0', 8);
+    this.drawTextCentered(ctx, modeName, 70, '#f0f0f0', 8);
 
     // Stage label
     if (game.mode && game.mode.stage === 4) {
-        this.drawTextCentered(ctx, 'STAGE IV - METASTATIC', 46, '#e040c0', 5);
+        this.drawTextCentered(ctx, 'STAGE IV - METASTATIC', 88, '#e040c0', 5);
     } else {
-        this.drawTextCentered(ctx, 'STAGE I', 46, '#40e0c0', 5);
+        this.drawTextCentered(ctx, 'STAGE I', 88, '#40e0c0', 5);
     }
 
-    // Decorative line
+    // Brief hint
     ctx.fillStyle = '#304060';
-    ctx.fillRect(cx - 60, 56, 120, 1);
+    ctx.fillRect(cx - 60, 102, 120, 1);
 
-    // Word wrap description
-    var words = desc.split(' ');
-    var line = '';
-    var lineY = 62;
-    for (var i = 0; i < words.length; i++) {
-        var testLine = line + (line ? ' ' : '') + words[i];
-        if (testLine.length > 44) {
-            this.drawText(ctx, line, 16, lineY, '#808090', 5);
-            line = words[i];
-            lineY += 8;
-        } else {
-            line = testLine;
-        }
-    }
-    if (line) {
-        this.drawText(ctx, line, 16, lineY, '#808090', 5);
-        lineY += 8;
-    }
+    this.drawTextCentered(ctx, '[HOLD SPACE] DEPLOY', 114, '#808090', 5);
 
-    // Controls section
-    lineY += 4;
-    ctx.fillStyle = '#304060';
-    ctx.fillRect(cx - 60, lineY, 120, 1);
-    lineY += 6;
-
-    this.drawText(ctx, 'CONTROLS:', 16, lineY, '#40e0c0', 5);
-    lineY += 10;
-
-    // Mode-specific controls
-    var modeIdx = game.currentModeIndex;
-    if (modeIdx === 2) {
-        // ADEPT — two-phase mechanic
-        this.drawText(ctx, '1. [HOLD SPACE] DEPLOY AB-ENZYME', 16, lineY, '#a040e0', 5);
-        lineY += 10;
-        this.drawText(ctx, '2. WAIT FOR OFF-TARGET TO CLEAR', 16, lineY, '#e0a040', 5);
-        lineY += 10;
-        this.drawText(ctx, '3. [HOLD SPACE] DEPLOY PRODRUG', 16, lineY, '#ff4040', 5);
-        lineY += 10;
-        this.drawText(ctx, '   [E] ADD MORE ENZYME', 16, lineY, '#808090', 5);
-    } else {
-        // Chemo / ADC
-        this.drawText(ctx, '[HOLD SPACE] CHARGE DOSE', 16, lineY, '#e0e040', 5);
-        lineY += 10;
-        this.drawText(ctx, '[RELEASE] DEPLOY INTO TANK', 16, lineY, '#e0e040', 5);
-        lineY += 10;
-        this.drawText(ctx, 'CHARGE MORE = BIGGER DOSE', 16, lineY, '#808090', 5);
-    }
-
-    this.drawTextCentered(ctx, 'PRESS ANY KEY', 196, '#e0e040', 5);
-    this.drawTextCentered(ctx, '[ESC] BACK', 208, '#404860', 5);
+    this.drawTextCentered(ctx, 'PRESS ANY KEY', 150, '#e0e040', 5);
+    this.drawTextCentered(ctx, '[ESC] BACK', 164, '#404860', 5);
 };
 
 ADEPT.HUD.prototype.renderResults = function(ctx, game) {

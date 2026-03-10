@@ -33,6 +33,8 @@ ADEPT.Input = function(canvas) {
         if (e.code === 'KeyR') self.selectedOption = 10; // retry
         if (e.code === 'KeyN') self.selectedOption = 11; // next
         if (e.code === 'KeyM') self.selectedOption = 12; // menu
+        if (e.code === 'KeyL') self.selectedOption = 13; // lab bench
+        if (e.code === 'KeyI') self.selectedOption = 14; // info
         if (e.code === 'Escape') { self.escPressed = true; self.selectedOption = 12; }
         if (e.code === 'ArrowUp') { e.preventDefault(); self.arrowUp = true; }
         if (e.code === 'ArrowDown') { e.preventDefault(); self.arrowDown = true; }

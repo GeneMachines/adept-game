@@ -6,7 +6,7 @@ ADEPT.Game = function(canvas) {
     this.input = new ADEPT.Input(canvas);
     this.hud = new ADEPT.HUD();
 
-    this.state = 'TITLE'; // TITLE, MENU, STAGE_SELECT, LAB_BENCH, MODE_INTRO, PLAYING, GAME_OVER, RESULTS
+    this.state = 'TITLE'; // TITLE, MENU, STAGE_SELECT, LAB_BENCH, HOW_TO_PLAY, MODE_INTRO, PLAYING, GAME_OVER, RESULTS
     this.mode = null;
     this.entities = [];
     this.tumor = null;
@@ -79,6 +79,10 @@ ADEPT.Game.prototype.update = function(dt) {
             if (opt === 0 || opt === 1 || opt === 2) {
                 this.currentModeIndex = opt;
                 this.state = 'STAGE_SELECT';
+            } else if (opt === 13) { // L - lab bench
+                this.setupLabBench();
+            } else if (opt === 14) { // I - info
+                this.state = 'HOW_TO_PLAY';
             }
             if (this.input.chargeReleased) this.input.consumeCharge();
             break;
@@ -91,9 +95,9 @@ ADEPT.Game.prototype.update = function(dt) {
                 break;
             }
             var opt = this.input.consumeOption();
-            if (opt === 0) this.setupLabBench(this.currentModeIndex, 1);
+            if (opt === 0) this.startMode(this.currentModeIndex, 1);
             else if (opt === 1 && this.isStageUnlocked(this.currentModeIndex, 4)) {
-                this.setupLabBench(this.currentModeIndex, 4);
+                this.startMode(this.currentModeIndex, 4);
             }
             if (this.input.chargeReleased) this.input.consumeCharge();
             break;
@@ -102,7 +106,7 @@ ADEPT.Game.prototype.update = function(dt) {
             if (this.input.consumeEsc()) {
                 this.input.consumeArrow();
                 this.input.consumeAnyKey();
-                this.state = 'STAGE_SELECT';
+                this.state = 'MENU';
                 break;
             }
             var arrow = this.input.consumeArrow();
@@ -124,9 +128,16 @@ ADEPT.Game.prototype.update = function(dt) {
             }
             if (labConfirm) {
                 this.applyLabBenchParams();
-                this.startMode(this.currentModeIndex, this.currentStage);
+                this.state = 'MENU';
             }
             this.input.consumeAnyKey();
+            break;
+
+        case 'HOW_TO_PLAY':
+            if (this.input.consumeEsc() || this.input.consumeAnyKey()) {
+                this.state = 'MENU';
+            }
+            if (this.input.chargeReleased) this.input.consumeCharge();
             break;
 
         case 'MODE_INTRO':
@@ -196,7 +207,7 @@ ADEPT.Game.prototype.update = function(dt) {
 ADEPT.Game.prototype.render = function(dt) {
     this.renderer.clear();
 
-    if (this.state === 'TITLE' || this.state === 'MENU' || this.state === 'STAGE_SELECT' || this.state === 'LAB_BENCH' || this.state === 'RESULTS' || this.state === 'GAME_OVER') {
+    if (this.state === 'TITLE' || this.state === 'MENU' || this.state === 'STAGE_SELECT' || this.state === 'LAB_BENCH' || this.state === 'HOW_TO_PLAY' || this.state === 'RESULTS' || this.state === 'GAME_OVER') {
         this.hud.render(this);
         this.renderer.present();
         return;
@@ -235,36 +246,17 @@ ADEPT.Game.prototype.startMode = function(index, stage) {
     this.state = 'MODE_INTRO';
 };
 
-ADEPT.Game.prototype.setupLabBench = function(modeIndex, stage) {
-    this.currentModeIndex = modeIndex;
-    this.currentStage = stage || 1;
+ADEPT.Game.prototype.setupLabBench = function() {
     this.labBenchCursor = 0;
 
-    var paramDefs = {
-        0: [
-            { name: 'POTENCY', obj: 'Balance', key: 'chemo_tumor_mult', min: 2.0, max: 6.0, step: 0.5, def: ADEPT.Balance.chemo_tumor_mult },
-            { name: 'CLEARANCE RATE', obj: 'PK_HL', key: 'chemo_free', min: 3.0, max: 12.0, step: 1.0, def: ADEPT.PK.HALF_LIFE.chemo_free },
-        ],
-        1: [
-            { name: 'DRUG LOADING', obj: 'Balance', key: 'adc_payload', min: 2, max: 8, step: 1, def: ADEPT.Balance.adc_payload },
-            { name: 'RELEASE RATE', obj: 'PK', key: 'ADC_LEAK_RATE', min: 0.10, max: 0.50, step: 0.05, def: ADEPT.PK.ADC_LEAK_RATE },
-        ],
-        2: [
-            { name: 'ENZYME RADIUS', obj: 'Balance', key: 'ae_catalytic_radius', min: 8, max: 24, step: 2, def: ADEPT.Balance.ae_catalytic_radius },
-            { name: 'PRODRUG POTENCY', obj: 'Balance', key: 'prodrug_potency', min: 0.4, max: 2.0, step: 0.2, def: ADEPT.Balance.prodrug_potency },
-        ],
-    };
-
-    this.labBenchParams = [];
-    var defs = paramDefs[modeIndex] || [];
-    for (var i = 0; i < defs.length; i++) {
-        var d = defs[i];
-        this.labBenchParams.push({
-            name: d.name, obj: d.obj, key: d.key,
-            min: d.min, max: d.max, step: d.step,
-            def: d.def, value: d.def,
-        });
-    }
+    this.labBenchParams = [
+        { name: 'POTENCY', obj: 'Balance', key: 'chemo_tumor_mult', min: 2.0, max: 6.0, step: 0.5, group: 0, value: ADEPT.Balance.chemo_tumor_mult },
+        { name: 'CLEARANCE RATE', obj: 'PK_HL', key: 'chemo_free', min: 3.0, max: 12.0, step: 1.0, group: 0, value: ADEPT.PK.HALF_LIFE.chemo_free },
+        { name: 'DRUG LOADING', obj: 'Balance', key: 'adc_payload', min: 2, max: 8, step: 1, group: 1, value: ADEPT.Balance.adc_payload },
+        { name: 'RELEASE RATE', obj: 'PK', key: 'ADC_LEAK_RATE', min: 0.10, max: 0.50, step: 0.05, group: 1, value: ADEPT.PK.ADC_LEAK_RATE },
+        { name: 'ENZYME RADIUS', obj: 'Balance', key: 'ae_catalytic_radius', min: 8, max: 24, step: 2, group: 2, value: ADEPT.Balance.ae_catalytic_radius },
+        { name: 'PRODRUG POTENCY', obj: 'Balance', key: 'prodrug_potency', min: 0.4, max: 2.0, step: 0.2, group: 2, value: ADEPT.Balance.prodrug_potency },
+    ];
 
     this.state = 'LAB_BENCH';
 };
@@ -318,10 +310,13 @@ ADEPT.Game.prototype.allTumorsDead = function() {
 
 ADEPT.Game.prototype.isStageUnlocked = function(modeIndex, stage) {
     if (stage === 1) return true;
-    // Stage IV unlocked by beating Stage I for this mode
+    // Stage IV unlocked by beating Stage I on ALL three modes
     try {
-        var key = 'adept_' + this.modeKeys[modeIndex] + '_s1_beat';
-        return localStorage.getItem(key) === '1';
+        for (var i = 0; i < this.modeKeys.length; i++) {
+            var key = 'adept_' + this.modeKeys[i] + '_s1_beat';
+            if (localStorage.getItem(key) !== '1') return false;
+        }
+        return true;
     } catch (e) {
         return false;
     }
