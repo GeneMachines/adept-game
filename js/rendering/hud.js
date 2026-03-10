@@ -139,8 +139,7 @@ ADEPT.HUD.prototype.render = function(game) {
             var doseStr = game.mode.aeDoses ? ' (' + game.mode.aeDoses + '/' + game.mode.maxAEDoses + ')' : '';
             this.drawText(ctx, '[SPACE] DEPLOY AB-ENZYME' + doseStr, T.LEFT, phaseY, '#a040e0', 5);
         } else if (game.mode.phase === 2) {
-            var offTarget = game.mode.getOffTargetCount ? game.mode.getOffTargetCount(game) : 0;
-            this.drawText(ctx, 'CLEARING... OFF-TARGET: ' + offTarget, T.LEFT, phaseY, '#e0a040', 5);
+            this.drawText(ctx, 'CLEARING...', T.LEFT, phaseY, '#e0a040', 5);
             this.drawText(ctx, '[SPACE] PRODRUG', T.LEFT, phaseY + 10, '#808890', 5);
             if (game.mode.aeDoses < game.mode.maxAEDoses) {
                 this.drawText(ctx, '[E] MORE ENZYME', T.LEFT + 90, phaseY + 10, '#a040e0', 5);
@@ -463,29 +462,62 @@ ADEPT.HUD.prototype.renderHowToPlay = function(ctx) {
 
 ADEPT.HUD.prototype.renderIntro = function(ctx, game) {
     var cx = ADEPT.Config.VIRTUAL_W / 2;
+    var cy = ADEPT.Config.VIRTUAL_H / 2;
     var modeName = game.mode ? game.mode.name : '';
+    var t = game.modeIntroTimer || 0;
 
-    // Dark panel behind text for readability
-    ctx.fillStyle = 'rgba(8, 12, 20, 0.85)';
-    ctx.fillRect(8, 40, ADEPT.Config.VIRTUAL_W - 16, 160);
+    // Mode colors
+    var modeColors = { 'SYSTEMIC CHEMO': '#ff4040', 'ADC': '#40e040', 'ADEPT': '#a040e0' };
+    var modeBgs = { 'SYSTEMIC CHEMO': 'rgba(180,0,0,', 'ADC': 'rgba(0,140,0,', 'ADEPT': 'rgba(100,0,160,' };
+    var col = modeColors[modeName] || '#f0f0f0';
+    var bgBase = modeBgs[modeName] || 'rgba(100,100,100,';
 
-    this.drawTextCentered(ctx, modeName, 70, '#f0f0f0', 8);
+    // Fade in
+    var alpha = 1;
+    if (t < 0.2) alpha = t / 0.2;
 
-    // Stage label
-    if (game.mode && game.mode.stage === 4) {
-        this.drawTextCentered(ctx, 'STAGE IV - METASTATIC', 88, '#e040c0', 5);
-    } else {
-        this.drawTextCentered(ctx, 'STAGE I', 88, '#40e0c0', 5);
+    // Full-screen dark overlay
+    ctx.fillStyle = 'rgba(8, 12, 20, ' + (alpha * 0.9) + ')';
+    ctx.fillRect(0, 0, ADEPT.Config.VIRTUAL_W, ADEPT.Config.VIRTUAL_H);
+
+    // Color glow behind title
+    ctx.fillStyle = bgBase + (alpha * 0.25) + ')';
+    var tw = ADEPT.BitmapFont.measure(modeName, 8);
+    var tx = Math.round(cx - tw / 2);
+    ctx.fillRect(tx - 12, cy - 54, tw + 24, 24);
+
+    // Mode name — big and centered
+    if (alpha > 0.1) {
+        this.drawText(ctx, modeName, tx, cy - 50, col, 8);
     }
 
-    // Brief hint
-    ctx.fillStyle = '#304060';
-    ctx.fillRect(cx - 60, 102, 120, 1);
+    // Stage label
+    if (t > 0.15) {
+        if (game.mode && game.mode.stage === 4) {
+            this.drawTextCentered(ctx, 'STAGE IV', cy - 32, '#e040c0', 5);
+        } else {
+            this.drawTextCentered(ctx, 'STAGE I', cy - 32, '#808890', 5);
+        }
+    }
 
-    this.drawTextCentered(ctx, '[HOLD SPACE] DEPLOY', 114, '#808090', 5);
+    // Mode-specific instructions
+    if (t > 0.3) {
+        if (modeName === 'ADEPT') {
+            this.drawTextCentered(ctx, '[SPACE] CHARGE ANTIBODY-ENZYME', cy - 12, '#a040e0', 5);
+            this.drawTextCentered(ctx, 'WAIT FOR OFF-TARGET TO CLEAR', cy + 2, '#e0a040', 5);
+            this.drawTextCentered(ctx, '[SPACE] CHARGE PRODRUG', cy + 16, '#ff4040', 5);
+        } else {
+            this.drawTextCentered(ctx, '[HOLD SPACE] CHARGE  [RELEASE] DEPLOY', cy - 6, '#505060', 5);
+        }
+    }
 
-    this.drawTextCentered(ctx, 'PRESS ANY KEY', 150, '#e0e040', 5);
-    this.drawTextCentered(ctx, '[ESC] BACK', 164, '#404860', 5);
+    // "PRESS ANY KEY" prompt
+    if (t > 0.6) {
+        var blink = Math.sin(Date.now() / 1000 * 3) > 0;
+        if (blink) {
+            this.drawTextCentered(ctx, 'PRESS ANY KEY', cy + 42, '#e0e040', 5);
+        }
+    }
 };
 
 ADEPT.HUD.prototype.renderResults = function(ctx, game) {

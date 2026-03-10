@@ -17,6 +17,7 @@ ADEPT.Game = function(canvas) {
     this.gameOverTimer = 0;
     this.labBenchParams = [];
     this.labBenchCursor = 0;
+    this.modeIntroTimer = 0;
 
     this.TICK_RATE = 60;
     this.TICK_MS = 1000 / this.TICK_RATE;
@@ -63,7 +64,7 @@ ADEPT.Game.prototype.update = function(dt) {
     switch (this.state) {
         case 'TITLE':
             if (this.input.consumeAnyKey()) {
-                this.state = 'MENU';
+                this.startMode(0, 1); // Jump straight into chemo
             }
             if (this.input.chargeReleased) this.input.consumeCharge();
             break;
@@ -141,15 +142,13 @@ ADEPT.Game.prototype.update = function(dt) {
             break;
 
         case 'MODE_INTRO':
-            if (this.input.consumeEsc()) {
-                this.input.consumeAnyKey();
-                this.state = 'MENU';
-                break;
-            }
-            if (this.input.consumeAnyKey()) {
+            this.modeIntroTimer += dt;
+            // Wait for "any key" after brief delay so text is readable
+            if (this.modeIntroTimer > 0.5 && this.input.consumeAnyKey()) {
                 this.state = 'PLAYING';
             }
             if (this.input.chargeReleased) this.input.consumeCharge();
+            this.input.consumeAnyKey();
             break;
 
         case 'PLAYING':
@@ -197,7 +196,7 @@ ADEPT.Game.prototype.update = function(dt) {
                 var next = (this.currentModeIndex + 1) % 3;
                 this.startMode(next, this.currentStage);
             } else if (opt === 12) { // M - menu
-                this.state = 'TITLE';
+                this.state = 'MENU';
             }
             if (this.input.chargeReleased) this.input.consumeCharge();
             break;
@@ -243,6 +242,7 @@ ADEPT.Game.prototype.startMode = function(index, stage) {
     }
 
     this.mode.setup(this);
+    this.modeIntroTimer = 0;
     this.state = 'MODE_INTRO';
 };
 
