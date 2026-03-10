@@ -129,9 +129,11 @@ ADEPT.Input.prototype.setGameState = function(state) {
 // ── HTML button wiring ──────────────────────────────────────
 ADEPT.Input.prototype.setupHTMLButtons = function() {
     var self = this;
-    this.btnCharge = document.getElementById('btn-charge');
-    this.btnAction = document.getElementById('btn-action');
-    this.btnBack   = document.getElementById('btn-back');
+    this.btnCharge  = document.getElementById('btn-charge');
+    this.btnBack    = document.getElementById('btn-back');
+    this.btnEnzyme  = document.getElementById('btn-enzyme');
+    this.btnProdrug = document.getElementById('btn-prodrug');
+    this.toggleGroup = document.getElementById('toggle-group');
 
     // CHARGE button — hold to charge, release to deploy
     this.btnCharge.addEventListener('touchstart', function(e) {
@@ -153,15 +155,24 @@ ADEPT.Input.prototype.setupHTMLButtons = function() {
         self.btnCharge.textContent = 'HOLD';
     });
 
-    // ACTION button — ADEPT enzyme/prodrug toggle
-    // In ADEPT phase 2: tap toggles between "next charge = enzyme" vs "next charge = prodrug"
-    // Default is prodrug (charge+release in phase 2 deploys prodrug).
-    // Tapping ENZYME fires phase2Triggered which sets phase back to 1 (enzyme deploy mode).
-    this.btnAction.addEventListener('touchstart', function(e) {
+    // ENZYME toggle — tap to switch back to enzyme deploy mode
+    // In phase 2, fires phase2Triggered which sets phase back to 1
+    this.btnEnzyme.addEventListener('touchstart', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        self.phase2Triggered = true;
-        self.anyKey = true;
+        var game = ADEPT.gameInstance;
+        if (game && game.mode && game.mode.phase === 2 &&
+            game.mode.aeDoses < game.mode.maxAEDoses) {
+            self.phase2Triggered = true;
+            self.anyKey = true;
+        }
+    });
+
+    // PRODRUG toggle — informational, charge+release deploys prodrug in phase 2/4
+    this.btnProdrug.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        // No action needed — prodrug deploys via charge in phase 2/4
     });
 
     // BACK button — ESC
@@ -179,40 +190,50 @@ ADEPT.Input.prototype.updateHTMLButtons = function(state) {
     if (!this.btnCharge) return;
 
     var controls = document.getElementById('touch-controls');
-    var btnAction = this.btnAction;
+    var toggle = this.toggleGroup;
 
     if (state === 'PLAYING') {
         controls.style.display = 'flex';
         this.btnBack.style.display = '';
         this.btnCharge.style.display = '';
 
-        // Show action button only in ADEPT mode
+        // Show toggle only in ADEPT mode
         var game = ADEPT.gameInstance;
         if (game && game.mode && game.mode.name === 'ADEPT') {
-            btnAction.classList.remove('hidden');
-            if (game.mode.phase === 1) {
-                btnAction.textContent = 'DEPLOY AE';
-                btnAction.style.display = 'none'; // Phase 1 uses charge button
-            } else if (game.mode.phase === 2) {
-                // In phase 2: charge = prodrug, this button = switch to more enzyme
-                btnAction.style.display = '';
-                if (game.mode.aeDoses < game.mode.maxAEDoses) {
-                    btnAction.textContent = 'MORE ENZYME';
+            toggle.classList.remove('hidden');
+            var phase = game.mode.phase;
+            var maxed = game.mode.aeDoses >= game.mode.maxAEDoses;
+
+            if (phase === 1) {
+                // Enzyme mode — enzyme active, prodrug dim
+                this.btnEnzyme.classList.add('active');
+                this.btnEnzyme.classList.remove('disabled');
+                this.btnProdrug.classList.remove('active');
+                this.btnProdrug.classList.remove('disabled');
+            } else if (phase === 2) {
+                // Prodrug mode — prodrug active, enzyme tappable if doses remain
+                this.btnProdrug.classList.add('active');
+                this.btnProdrug.classList.remove('disabled');
+                this.btnEnzyme.classList.remove('active');
+                if (maxed) {
+                    this.btnEnzyme.classList.add('disabled');
                 } else {
-                    btnAction.textContent = 'MAX ENZYME';
-                    btnAction.style.display = 'none';
+                    this.btnEnzyme.classList.remove('disabled');
                 }
-            } else if (game.mode.phase === 4) {
-                btnAction.style.display = 'none'; // Phase 4 just uses charge
+            } else if (phase === 4) {
+                // Prodrug locked — prodrug active, enzyme disabled
+                this.btnProdrug.classList.add('active');
+                this.btnProdrug.classList.remove('disabled');
+                this.btnEnzyme.classList.remove('active');
+                this.btnEnzyme.classList.add('disabled');
             }
         } else {
-            btnAction.classList.add('hidden');
-            btnAction.style.display = 'none';
+            toggle.classList.add('hidden');
         }
     } else {
         // Non-playing states: hide gameplay buttons, show controls bar for back only
         this.btnCharge.style.display = 'none';
-        btnAction.style.display = 'none';
+        toggle.classList.add('hidden');
 
         // Show back button on screens that support ESC
         var showBack = (state === 'MENU' || state === 'STAGE_SELECT' ||

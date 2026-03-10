@@ -82,17 +82,54 @@ body {
     background: rgba(30, 30, 50, 0.8);
 }
 
-/* ADEPT toggle button — highlighted when selected */
-.touch-btn.btn-toggle {
-    position: relative;
+/* ── ADEPT enzyme/prodrug toggle ─────────────────── */
+.toggle-group {
+    display: flex;
+    flex: 1.5;
+    max-width: 220px;
 }
 
-.touch-btn.btn-toggle.selected {
+.toggle-group.hidden {
+    display: none;
+}
+
+.toggle-opt {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    flex: 1;
+    padding: 14px 4px;
+    border: 1px solid #252540;
+    background: rgba(10, 10, 30, 0.8);
+    color: #353550;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    transition: none;
+}
+
+.toggle-opt:first-child {
+    border-right: none;
+}
+
+/* Active enzyme = purple */
+#btn-enzyme.active {
     border-color: #a040e0;
     color: #a040e0;
+    background: rgba(80, 20, 120, 0.3);
 }
 
-/* Hidden by default, shown by JS when relevant */
-.touch-btn.hidden {
-    display: none;
+/* Active prodrug = red */
+#btn-prodrug.active {
+    border-color: #ff4040;
+    color: #ff4040;
+    background: rgba(120, 20, 20, 0.3);
+}
+
+/* Disabled state (e.g. max enzyme reached) */
+.toggle-opt.disabled {
+    color: #1a1a2a;
+    border-color: #1a1a2a;
+    cursor: default;
 }
