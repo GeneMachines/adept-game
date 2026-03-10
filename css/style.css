@@ -93,13 +93,13 @@ body {
     max-width: 220px;
     border-radius: 100px;
     background: #a040e0;
-    padding: 3px;
-    gap: 0;
+    padding: 4px;
+    gap: 2px;
     overflow: hidden;
 }
 
 .toggle-group.hidden {
-    display: none;
+    display: none !important;
 }
 
 .toggle-opt {
@@ -107,28 +107,29 @@ body {
     appearance: none;
     font-family: 'Press Start 2P', monospace;
     font-size: 8px;
+    line-height: 1;
     flex: 1;
-    padding: 11px 6px;
+    padding: 10px 4px;
+    margin: 0;
     border: none;
     border-radius: 100px;
     background: transparent;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.45);
     text-align: center;
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
-    transition: background 0.15s, color 0.15s;
 }
 
-/* Active option — white pill with colored text */
+/* Active option — dark pill inside colored track */
 .toggle-opt.active {
     background: #0a0a1a;
     color: #a040e0;
 }
 
-/* Prodrug active — red tint on outer pill */
+/* Prodrug active — red track */
 .toggle-group.prodrug-active {
     background: #c03030;
 }
@@ -137,8 +138,8 @@ body {
     color: #ff4040;
 }
 
-/* Disabled state (e.g. max enzyme reached) */
+/* Disabled state */
 .toggle-opt.disabled {
-    color: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.12);
     cursor: default;
 }

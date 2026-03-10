@@ -155,33 +155,26 @@ ADEPT.Input.prototype.setupHTMLButtons = function() {
         self.btnCharge.textContent = 'HOLD';
     });
 
-    // ENZYME toggle — tap to switch back to enzyme deploy mode
+    // ENZYME toggle — tap to switch to enzyme deploy mode
     // In phase 2, fires phase2Triggered which sets phase back to 1
-    var enzymeHandler = function(e) {
+    this.btnEnzyme.addEventListener('click', function(e) {
         e.preventDefault();
-        e.stopPropagation();
         var game = ADEPT.gameInstance;
         if (game && game.mode && game.mode.phase === 2 &&
             game.mode.aeDoses < game.mode.maxAEDoses) {
             self.phase2Triggered = true;
             self.anyKey = true;
         }
-    };
-    this.btnEnzyme.addEventListener('touchstart', enzymeHandler);
-    this.btnEnzyme.addEventListener('click', enzymeHandler);
+    });
 
-    // PRODRUG toggle — informational, charge+release deploys prodrug in phase 2/4
-    var prodrugHandler = function(e) {
+    // PRODRUG toggle — no action (charge deploys prodrug in phase 2/4)
+    this.btnProdrug.addEventListener('click', function(e) {
         e.preventDefault();
-        e.stopPropagation();
-    };
-    this.btnProdrug.addEventListener('touchstart', prodrugHandler);
-    this.btnProdrug.addEventListener('click', prodrugHandler);
+    });
 
     // BACK button — ESC
-    this.btnBack.addEventListener('touchstart', function(e) {
+    this.btnBack.addEventListener('click', function(e) {
         e.preventDefault();
-        e.stopPropagation();
         self.escPressed = true;
         self.selectedOption = 12;
         self.anyKey = true;
