@@ -52,18 +52,34 @@ ADEPT.Sound = {
 
     _setupUnlock: function() {
         var self = this;
-        var unlock = function() {
-            if (self.unlocked) return;
-            if (self.ctx.state === 'suspended') {
-                self.ctx.resume().then(function() {
-                    self.unlocked = true;
-                });
-            } else {
-                self.unlocked = true;
-            }
+        var removeListeners = function() {
             window.removeEventListener('touchstart', unlock, true);
             window.removeEventListener('mousedown', unlock, true);
             window.removeEventListener('keydown', unlock, true);
+        };
+        var unlock = function() {
+            if (self.unlocked) return;
+            var ctx = self.ctx;
+
+            // Play a silent buffer to prime iOS audio pipeline
+            try {
+                var buffer = ctx.createBuffer(1, 1, 22050);
+                var source = ctx.createBufferSource();
+                source.buffer = buffer;
+                source.connect(ctx.destination);
+                source.start(0);
+            } catch(e) {}
+
+            if (ctx.state === 'suspended') {
+                ctx.resume().then(function() {
+                    self.unlocked = true;
+                    removeListeners();
+                });
+                // Don't remove listeners yet — retry on next touch if needed
+            } else {
+                self.unlocked = true;
+                removeListeners();
+            }
         };
         window.addEventListener('touchstart', unlock, true);
         window.addEventListener('mousedown', unlock, true);
@@ -71,7 +87,12 @@ ADEPT.Sound = {
     },
 
     play: function(name) {
-        if (this.muted || !this.unlocked || !this.ctx) return;
+        if (this.muted || !this.ctx) return;
+        // Auto-resume if not yet unlocked
+        if (!this.unlocked) {
+            if (this.ctx.state === 'suspended') this.ctx.resume();
+            return;
+        }
         if (this.activeCount >= this.MAX_ACTIVE) return;
 
         var now = performance.now();
@@ -91,7 +112,11 @@ ADEPT.Sound = {
 
     // Sustained rising tone while charging — call from input start/stop
     startCharge: function() {
-        if (this.muted || !this.unlocked || !this.ctx) return;
+        if (this.muted || !this.ctx) return;
+        if (!this.unlocked) {
+            if (this.ctx.state === 'suspended') this.ctx.resume();
+            return;
+        }
         this.stopCharge(); // kill any existing
 
         var ctx = this.ctx;
