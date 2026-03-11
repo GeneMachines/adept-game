@@ -8,6 +8,8 @@ ADEPT.Sound = {
     activeCount: 0,
     MAX_ACTIVE: 8,
     _lastPlayed: {},
+    _chargeOsc: null,
+    _chargeGain: null,
 
     // Minimum ms between repeated plays of the same sound
     _intervals: {
@@ -83,7 +85,55 @@ ADEPT.Sound = {
 
     toggleMute: function() {
         this.muted = !this.muted;
+        if (this.muted) this.stopCharge();
         return this.muted;
+    },
+
+    // Sustained rising tone while charging — call from input start/stop
+    startCharge: function() {
+        if (this.muted || !this.unlocked || !this.ctx) return;
+        this.stopCharge(); // kill any existing
+
+        var ctx = this.ctx;
+        var now = ctx.currentTime;
+        var vol = this.volume;
+
+        // Rising triangle tone: 80Hz → 800Hz over 6s (matches maxCharge)
+        var gain = ctx.createGain();
+        gain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(vol * 0.10, now + 0.08);
+        gain.gain.linearRampToValueAtTime(vol * 0.18, now + 6.0);
+
+        var osc = ctx.createOscillator();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(80, now);
+        osc.frequency.exponentialRampToValueAtTime(800, now + 6.0);
+        osc.connect(gain);
+        osc.start(now);
+        this._trackOsc(osc);
+
+        this._chargeOsc = osc;
+        this._chargeGain = gain;
+    },
+
+    stopCharge: function() {
+        var ctx = this.ctx;
+        if (!ctx) return;
+        var now = ctx.currentTime;
+
+        if (this._chargeGain) {
+            this._chargeGain.gain.cancelScheduledValues(now);
+            this._chargeGain.gain.setValueAtTime(
+                this._chargeGain.gain.value, now
+            );
+            this._chargeGain.gain.linearRampToValueAtTime(0, now + 0.03);
+        }
+        if (this._chargeOsc) {
+            try { this._chargeOsc.stop(now + 0.05); } catch(e) {}
+            this._chargeOsc = null;
+        }
+        this._chargeGain = null;
     },
 
     _trackOsc: function(osc) {

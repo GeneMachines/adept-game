@@ -58,25 +58,25 @@ ADEPT.Text = {
     // Plain strings = default gray. { text, color } = emphasis.
     intro: {
         chemo: [
-            'YOU DISCOVER THE CROWN OF',
-            'THORNS IS WEAK AGAINST',
-            'CHEMICAL X',
-            { text: 'USE IT TO KILL THE INVADER!', color: '#e0e040' },
+            'THE CROWN OF THORNS IS WEAK',
+            'AGAINST CHEMICAL X.',
+            { text: 'KILL THE INVADER!', color: '#e0e040' },
+            { text: 'PROTECT THE CUTTLEFISH!', color: '#e06040' },
+            { text: 'BUT CHEMO HURTS EVERYTHING!', color: '#ff4040' },
         ],
         adc: [
-            'CHEMICAL X WAS EFFECTIVE BUT ITS',
-            'INDISCRIMINATE KILLING CAME AT A',
-            'GREAT COST.',
-            { text: 'YOU ADD TARGETING TO CHEMICAL X', color: '#40e0c0' },
-            { text: 'AND CREATE AN ADC!', color: '#40e0c0' },
-            { text: 'USE THE ADC TO DEFEAT THE INVADER!', color: '#e0e040' },
+            'CHEMICAL X WORKED BUT WAS',
+            'INDISCRIMINATE.',
+            { text: 'THE ADC TARGETS THE INVADER', color: '#40e0c0' },
+            { text: 'AND DELIVERS PAYLOAD DIRECTLY.', color: '#40e0c0' },
+            { text: 'BUT SOME PAYLOAD STILL LEAKS...', color: '#e0a040' },
         ],
         adept: [
-            'THE ADC DID THE JOB BUT IT',
-            'STILL LEFT THE LOCALS IN A SICKENED STATE.',
-            { text: 'IN ONE FINAL ATTEMPT YOU SPLIT', color: '#40e0c0' },
-            { text: 'TARGETING FROM PAYLOAD TO CREATE ADEPT.', color: '#40e0c0' },
-            { text: 'USE ADEPT TO DEFEAT THE INVADER ONCE AND FOR ALL!', color: '#e0e040' },
+            'THE ADC STILL CAUSED DAMAGE.',
+            { text: 'SPLIT TARGETING FROM PAYLOAD!', color: '#40e0c0' },
+            { text: 'A TWO-STAGE SYSTEM:', color: '#e0e040' },
+            { text: '1. AB-ENZYME MARKS THE TARGET', color: '#a040e0' },
+            { text: '2. PRODRUG ACTIVATES AT THE MARK', color: '#ff4040' },
         ],
         // Controls shown below narrative text
         controls: {
@@ -84,10 +84,17 @@ ADEPT.Text = {
                 { text: '[HOLD SPACE] CHARGE', color: '#505060' },
                 { text: '[RELEASE] DEPLOY',    color: '#505060' },
             ],
+            defaultMobile: [
+                { text: 'HOLD BUTTON TO CHARGE', color: '#505060' },
+                { text: 'RELEASE TO DEPLOY',     color: '#505060' },
+            ],
             adept: [
-                { text: '[SPACE] CHARGE ANTIBODY-ENZYME', color: '#a040e0' },
-                { text: 'WAIT FOR OFF-TARGET TO CLEAR',   color: '#e0a040' },
-                { text: '[SPACE] CHARGE PRODRUG',          color: '#ff4040' },
+                { text: '[SPACE] CHARGE + DEPLOY', color: '#505060' },
+                { text: '[E] TOGGLE ENZYME / PRODRUG', color: '#a040e0' },
+            ],
+            adeptMobile: [
+                { text: 'HOLD BUTTON TO CHARGE',         color: '#505060' },
+                { text: 'TAP ENZYME/PRODRUG TO TOGGLE', color: '#a040e0' },
             ],
         },
     },

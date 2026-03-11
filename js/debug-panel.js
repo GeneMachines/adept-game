@@ -19,7 +19,7 @@ ADEPT.Balance = {
     adc_leak_drug_potency: 0.8,    // leaked drug is slightly less potent
     prodrug_potency: 1.2,           // prodrug activation yields concentrated drug
     ae_catalytic_radius: 14,        // enzyme catalytic radius (slightly larger for gameplay)
-    pinocytosis_rate: 0.15,         // uptake prob/sec for free antibodies near cuttlefish
+    pinocytosis_rate: 0.25,         // uptake prob/sec for free antibodies near cuttlefish
     pinocytosis_dmg_mult: 1.5,      // damage mult for internalized ADC payload
 };
 

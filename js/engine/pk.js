@@ -10,9 +10,9 @@ ADEPT.PK = {
         adc_free: 20.0,                        // large protein, persists longer
         adc_bound_tumor: 60.0,                 // internalized, very stable
         adc_bound_cuttlefish: 12.0,            // off-target, detaches faster
-        antibody_enzyme_free: 20.0,            // large protein like ADC
+        antibody_enzyme_free: 12.0,            // large protein, clears moderately
         antibody_enzyme_bound_tumor: 300.0,    // extremely stable (pretargeting advantage)
-        antibody_enzyme_bound_cuttlefish: 8.0, // off-target clears fast (clearance phase)
+        antibody_enzyme_bound_cuttlefish: 5.0, // off-target clears fast (clearance phase)
         prodrug_free: 8.0,                     // small molecule prodrug
         active_drug_free: 4.0,                 // small active drug, clears fastest
     },

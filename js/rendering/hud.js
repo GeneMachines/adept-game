@@ -674,8 +674,17 @@ ADEPT.HUD.prototype.renderIntro = function(ctx, game) {
 
         // Controls appear 0.3s after narrative finishes
         if (crawlElapsed > crawlDuration + 0.3) {
-            var controls = (modeKey === 'adept') ? TX.controls.adept : TX.controls.default;
-            var iy = titleY + 108;
+            var isMobile = ADEPT.Input && ADEPT.Input.isMobile;
+            var controlKey;
+            if (modeKey === 'adept') {
+                controlKey = isMobile ? 'adeptMobile' : 'adept';
+            } else {
+                controlKey = isMobile ? 'defaultMobile' : 'default';
+            }
+            var controls = TX.controls[controlKey] || TX.controls.default;
+
+            // Position controls dynamically below narrative
+            var iy = ny + narrativeLines.length * 12 + 12;
             ctx.fillStyle = '#304060';
             ctx.fillRect(cx - 50, iy - 6, 100, 1);
 

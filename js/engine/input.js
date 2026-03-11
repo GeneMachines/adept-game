@@ -42,6 +42,7 @@ ADEPT.Input = function(canvas) {
         if (e.code === 'Space') {
             e.preventDefault();
             self.charging = true;
+            if (self.gameState === 'PLAYING' && ADEPT.Sound) ADEPT.Sound.startCharge();
         }
         if (e.code === 'KeyE' || e.code === 'Enter') {
             self.phase2Triggered = true;
@@ -69,6 +70,7 @@ ADEPT.Input = function(canvas) {
                 self.chargeReleased = true;
                 self.chargeValue = self.chargeTime / self.maxCharge;
                 self.charging = false;
+                if (ADEPT.Sound) ADEPT.Sound.stopCharge();
             }
         }
     });
@@ -88,6 +90,7 @@ ADEPT.Input = function(canvas) {
             self.chargeReleased = true;
             self.chargeValue = self.chargeTime / self.maxCharge;
             self.charging = false;
+            if (ADEPT.Sound) ADEPT.Sound.stopCharge();
         }
     });
 
@@ -143,6 +146,7 @@ ADEPT.Input.prototype.setupHTMLButtons = function() {
         self.charging = true;
         self.btnCharge.classList.add('active');
         self.btnCharge.textContent = 'RELEASE';
+        if (self.gameState === 'PLAYING' && ADEPT.Sound) ADEPT.Sound.startCharge();
     });
     this.btnCharge.addEventListener('touchend', function(e) {
         e.preventDefault();
@@ -151,6 +155,7 @@ ADEPT.Input.prototype.setupHTMLButtons = function() {
             self.chargeReleased = true;
             self.chargeValue = self.chargeTime / self.maxCharge;
             self.charging = false;
+            if (ADEPT.Sound) ADEPT.Sound.stopCharge();
         }
         self.btnCharge.classList.remove('active');
         self.btnCharge.textContent = 'HOLD';
