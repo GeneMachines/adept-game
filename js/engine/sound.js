@@ -5,11 +5,14 @@ ADEPT.Sound = {
     unlocked: false,
     muted: false,
     volume: 0.3,
+    musicVolume: 0.18,
     activeCount: 0,
     MAX_ACTIVE: 8,
     _lastPlayed: {},
     _chargeOsc: null,
     _chargeGain: null,
+    _music: null,
+    _musicStarted: false,
 
     // Minimum ms between repeated plays of the same sound
     _intervals: {
@@ -41,6 +44,13 @@ ADEPT.Sound = {
             // Web Audio not supported — sounds disabled silently
         }
 
+        // Background music (HTML5 Audio — better for long files)
+        try {
+            this._music = new Audio('assets/8-bit-leaving-yoshi-slow-105bpm-loopable.mp3');
+            this._music.loop = true;
+            this._music.volume = this.musicVolume;
+        } catch (e) {}
+
         // Mute toggle on S key
         var self = this;
         window.addEventListener('keydown', function(e) {
@@ -48,6 +58,22 @@ ADEPT.Sound = {
                 self.toggleMute();
             }
         });
+
+        // Mute button (HTML overlay)
+        var btn = document.getElementById('btn-mute');
+        if (btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                self.toggleMute();
+            });
+            // Also use touchstart for instant mobile response
+            btn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                self.toggleMute();
+            });
+        }
     },
 
     _setupUnlock: function() {
@@ -56,6 +82,12 @@ ADEPT.Sound = {
             window.removeEventListener('touchstart', unlock, true);
             window.removeEventListener('mousedown', unlock, true);
             window.removeEventListener('keydown', unlock, true);
+        };
+        var onUnlocked = function() {
+            self.unlocked = true;
+            removeListeners();
+            // Start background music on first interaction
+            self._startMusic();
         };
         var unlock = function() {
             if (self.unlocked) return;
@@ -71,19 +103,21 @@ ADEPT.Sound = {
             } catch(e) {}
 
             if (ctx.state === 'suspended') {
-                ctx.resume().then(function() {
-                    self.unlocked = true;
-                    removeListeners();
-                });
+                ctx.resume().then(onUnlocked);
                 // Don't remove listeners yet — retry on next touch if needed
             } else {
-                self.unlocked = true;
-                removeListeners();
+                onUnlocked();
             }
         };
         window.addEventListener('touchstart', unlock, true);
         window.addEventListener('mousedown', unlock, true);
         window.addEventListener('keydown', unlock, true);
+    },
+
+    _startMusic: function() {
+        if (this._musicStarted || !this._music || this.muted) return;
+        this._musicStarted = true;
+        try { this._music.play(); } catch(e) {}
     },
 
     play: function(name) {
@@ -106,7 +140,24 @@ ADEPT.Sound = {
 
     toggleMute: function() {
         this.muted = !this.muted;
-        if (this.muted) this.stopCharge();
+        if (this.muted) {
+            this.stopCharge();
+            if (this._music) this._music.pause();
+        } else {
+            // Resume music if it was playing before
+            if (this._music && this._musicStarted) {
+                try { this._music.play(); } catch(e) {}
+            }
+        }
+        // Update button visual
+        var btn = document.getElementById('btn-mute');
+        if (btn) {
+            if (this.muted) {
+                btn.classList.add('muted');
+            } else {
+                btn.classList.remove('muted');
+            }
+        }
         return this.muted;
     },
 

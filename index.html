@@ -21,11 +21,17 @@
     <meta name="twitter:description" content="Outsmart the Crown of Thorns! An educational retro arcade game about cancer drug delivery.">
     <meta name="twitter:image" content="https://genemachines.github.io/adept-game/og-preview.jpg">
 
-    <link rel="stylesheet" href="css/style.css?v=47">
+    <link rel="stylesheet" href="css/style.css?v=48">
 </head>
 <body>
     <div id="game-wrapper">
         <canvas id="game-canvas"></canvas>
+        <button id="btn-mute" class="mute-btn" aria-label="Toggle sound">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 75 75" class="mute-icon">
+                <path class="speaker-body" d="M39.389,13.769 L22.235,28.606 L6,28.606 L6,47.699 L21.989,47.699 L39.389,62.75 L39.389,13.769z"/>
+                <path class="speaker-waves" d="M48,27.6a19.5,19.5 0 0 1 0,21.4M55.1,20.5a30,30 0 0 1 0,35.6M61.6,14a38.8,38.8 0 0 1 0,48.6"/>
+            </svg>
+        </button>
         <div id="touch-controls">
             <button class="touch-btn btn-back" id="btn-back">BACK</button>
             <button class="touch-btn" id="btn-charge">HOLD</button>
@@ -42,42 +48,42 @@
     </div>
 
     <!-- Engine -->
-    <script src="js/engine/physics.js?v=47"></script>
-    <script src="js/engine/pk.js?v=47"></script>
-    <script src="js/engine/input.js?v=47"></script>
-    <script src="js/engine/scoring.js?v=47"></script>
-    <script src="js/engine/sound.js?v=47"></script>
-    <script src="js/debug-panel.js?v=47"></script>
+    <script src="js/engine/physics.js?v=48"></script>
+    <script src="js/engine/pk.js?v=48"></script>
+    <script src="js/engine/input.js?v=48"></script>
+    <script src="js/engine/scoring.js?v=48"></script>
+    <script src="js/engine/sound.js?v=48"></script>
+    <script src="js/debug-panel.js?v=48"></script>
 
     <!-- Entities -->
-    <script src="js/entities/entity.js?v=47"></script>
-    <script src="js/entities/molecule.js?v=47"></script>
-    <script src="js/entities/cuttlefish.js?v=47"></script>
-    <script src="js/entities/tumor.js?v=47"></script>
-    <script src="js/entities/chemo.js?v=47"></script>
-    <script src="js/entities/adc.js?v=47"></script>
-    <script src="js/entities/antibody-enzyme.js?v=47"></script>
-    <script src="js/entities/prodrug.js?v=47"></script>
-    <script src="js/entities/active-drug.js?v=47"></script>
+    <script src="js/entities/entity.js?v=48"></script>
+    <script src="js/entities/molecule.js?v=48"></script>
+    <script src="js/entities/cuttlefish.js?v=48"></script>
+    <script src="js/entities/tumor.js?v=48"></script>
+    <script src="js/entities/chemo.js?v=48"></script>
+    <script src="js/entities/adc.js?v=48"></script>
+    <script src="js/entities/antibody-enzyme.js?v=48"></script>
+    <script src="js/entities/prodrug.js?v=48"></script>
+    <script src="js/entities/active-drug.js?v=48"></script>
 
     <!-- Config -->
-    <script src="js/config/text.js?v=47"></script>
+    <script src="js/config/text.js?v=48"></script>
 
     <!-- Rendering -->
-    <script src="js/rendering/sprites.js?v=47"></script>
-    <script src="js/rendering/particles.js?v=47"></script>
-    <script src="js/rendering/renderer.js?v=47"></script>
-    <script src="js/rendering/bitmap-font.js?v=47"></script>
-    <script src="js/rendering/hud.js?v=47"></script>
+    <script src="js/rendering/sprites.js?v=48"></script>
+    <script src="js/rendering/particles.js?v=48"></script>
+    <script src="js/rendering/renderer.js?v=48"></script>
+    <script src="js/rendering/bitmap-font.js?v=48"></script>
+    <script src="js/rendering/hud.js?v=48"></script>
 
     <!-- Modes -->
-    <script src="js/modes/mode-base.js?v=47"></script>
-    <script src="js/modes/mode-chemo.js?v=47"></script>
-    <script src="js/modes/mode-adc.js?v=47"></script>
-    <script src="js/modes/mode-adept.js?v=47"></script>
+    <script src="js/modes/mode-base.js?v=48"></script>
+    <script src="js/modes/mode-chemo.js?v=48"></script>
+    <script src="js/modes/mode-adc.js?v=48"></script>
+    <script src="js/modes/mode-adept.js?v=48"></script>
 
     <!-- Game Loop -->
-    <script src="js/engine/game.js?v=47"></script>
-    <script src="js/main.js?v=47"></script>
+    <script src="js/engine/game.js?v=48"></script>
+    <script src="js/main.js?v=48"></script>
 </body>
 </html>

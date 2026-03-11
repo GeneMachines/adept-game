@@ -20,6 +20,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
 }
 
 #game-canvas {
@@ -28,6 +29,65 @@ body {
     image-rendering: crisp-edges;
     cursor: pointer;
     touch-action: none;
+}
+
+/* ── Mute button (top-right of canvas) ────────────── */
+.mute-btn {
+    -webkit-appearance: none;
+    appearance: none;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    z-index: 10;
+    width: 28px;
+    height: 28px;
+    padding: 4px;
+    background: rgba(10, 10, 30, 0.6);
+    border: 1px solid #253040;
+    border-radius: 0;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.mute-btn:active {
+    background: rgba(40, 60, 100, 0.6);
+    border-color: #506080;
+}
+
+.mute-icon {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.mute-icon .speaker-body {
+    fill: #506080;
+    stroke: #506080;
+    stroke-width: 5;
+    stroke-linejoin: round;
+}
+
+.mute-icon .speaker-waves {
+    fill: none;
+    stroke: #506080;
+    stroke-width: 5;
+    stroke-linecap: round;
+}
+
+.mute-btn.muted {
+    border-color: #1a1418;
+}
+
+.mute-btn.muted .speaker-body {
+    fill: #302828;
+    stroke: #302828;
+}
+
+.mute-btn.muted .speaker-waves {
+    display: none;
 }
 
 /* ── Mobile touch controls bar ────────────────────── */
