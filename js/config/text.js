@@ -182,76 +182,62 @@ ADEPT.Text = {
         closing: 'THE HOMELAND IS SAVED.',
     },
 
-    // ── RESULTS INFO (per-mode educational facts) ─────────────
-    // Press [I] on results screen to view.
+    // ── DID YOU KNOW (educational cards after boss victory) ────
+    // Shown in sequence: chemo → ADC → ADEPT, then ENDING plays.
     // Plain strings = default gray. { text, color } = emphasis.
-    // 'refs' array = literature references shown at bottom.
-    resultsInfo: {
-        chemo: {
-            title: 'SYSTEMIC CHEMO',
-            color: '#ff4040',
-            facts: [
-                'CHEMO TARGETS UNIVERSAL CELLULAR',
-                'MACHINERY AND RELIES ON',
-                'TUMOUR-SPECIFIC SENSITIVITY',
-                'FOR SELECTIVE EFFECT.',
-                '',
-                { text: 'TUMOURS CAN CONTAIN BILLIONS', color: '#40e0c0' },
-                { text: 'OF CELLS, REQUIRING THE', color: '#40e0c0' },
-                { text: 'DESTRUCTION OF 99.9999999999%', color: '#40e0c0' },
-                { text: 'OF THEM.', color: '#40e0c0' },
-                '',
-                { text: 'HOWEVER, EVEN A 90% KILL IN A', color: '#e0a040' },
-                { text: 'HEALTHY ORGAN WOULD BE FATAL.', color: '#e0a040' },
-            ],
-            refs: [
-                'LETAI AND DE THE, NAT. REV.',
-                'CANCER 25, 209-218 (2025)',
-            ],
-        },
-        adc: {
-            title: 'ADC',
-            color: '#40e040',
-            facts: [
-                'ANTIBODY-DRUG CONJUGATES LINK A',
-                'CYTOTOXIC PAYLOAD TO A TARGETING',
-                'ANTIBODY VIA A CHEMICAL LINKER.',
-                '',
-                { text: 'LESS THAN 1% OF THE INITIAL', color: '#40e0c0' },
-                { text: 'DOSE OF AN ADC ACTUALLY', color: '#40e0c0' },
-                { text: 'REACHES THE TUMOUR.', color: '#40e0c0' },
-                '',
-                { text: 'THE REMAINDER IS TURNED OVER', color: '#e0a040' },
-                { text: 'IN HEALTHY TISSUE.', color: '#e0a040' },
-            ],
-            refs: [
-                'PLACEHOLDER REFERENCE 1',
-                'PLACEHOLDER REFERENCE 2',
-            ],
-        },
-        adept: {
-            title: 'ADEPT',
-            color: '#a040e0',
-            facts: [
-                'BY PRETARGETING THE TUMOUR WITH',
-                'AN ANTIBODY-ENZYME FUSION,',
-                'HEALTHY TISSUE IS SPARED.',
-                '',
-                { text: 'ENZYME LOCALISED IN THE TUMOUR', color: '#e0a040' },
-                { text: 'ACTIVATES AN OTHERWISE BENIGN', color: '#e0a040' },
-                { text: 'PRODRUG, GENERATING PAYLOAD', color: '#e0a040' },
-                { text: 'RIGHT WHERE IT\'S NEEDED.', color: '#e0a040' },
-                '',
-                { text: 'ENZYMES CAN CONVERT 100S OR', color: '#40e0c0' },
-                { text: '1000S OF MOLECULES PER SECOND,', color: '#40e0c0' },
-                { text: 'SO THE DRUG-ANTIBODY RATIO OF', color: '#40e0c0' },
-                { text: 'ADEPT IS EFFECTIVELY UNCAPPED.', color: '#40e0c0' },
-            ],
-            refs: [
-                'PLACEHOLDER REFERENCE 1',
-                'PLACEHOLDER REFERENCE 2',
-            ],
-        },
+    didYouKnow: {
+        header: 'D I D  Y O U  K N O W',
+        cards: [
+            {
+                title: 'SYSTEMIC CHEMO',
+                color: '#ff4040',
+                facts: [
+                    'CHEMOTHERAPY TARGETS UNIVERSAL',
+                    'CELLULAR MACHINERY. IT DOES NOT',
+                    'DISTINGUISH TUMOUR FROM HEALTHY',
+                    'TISSUE.',
+                    '',
+                    { text: 'TUMOURS HAVE BILLIONS OF CELLS,', color: '#40e0c0' },
+                    { text: 'ALL OF WHICH MUST BE ELIMINATED,', color: '#40e0c0' },
+                    { text: 'WHILE PROTECTING HEALTHY TISSUE', color: '#40e0c0' },
+                    { text: 'FROM EVEN A FRACTION OF THAT', color: '#40e0c0' },
+                    { text: 'DAMAGE.', color: '#40e0c0' },
+                ],
+            },
+            {
+                title: 'ADC',
+                color: '#40e040',
+                facts: [
+                    'DESPITE TUMOUR-SPECIFIC BINDING,',
+                    'LESS THAN 1% OF AN ADC DOSE',
+                    'ACTUALLY REACHES THE TUMOUR.',
+                    'THE REST IS TURNED OVER IN',
+                    'HEALTHY TISSUE.',
+                    '',
+                    { text: 'ADCS HAVE A SIMILAR TOXICITY', color: '#e0a040' },
+                    { text: 'PROFILE TO FREE PAYLOAD \u2014 THEY', color: '#e0a040' },
+                    { text: "DON'T REDUCE OFF-TARGET TOXICITY,", color: '#e0a040' },
+                    { text: 'ONLY INCREASE EFFICACY.', color: '#e0a040' },
+                ],
+            },
+            {
+                title: 'ADEPT',
+                color: '#a040e0',
+                facts: [
+                    'NEITHER THE ANTIBODY-ENZYME NOR',
+                    'THE PRODRUG IS TOXIC ALONE. ONLY',
+                    'WHEN THEY MEET AT THE TUMOUR IS',
+                    'ACTIVE DRUG GENERATED.',
+                    '',
+                    { text: 'TURNOVER IN HEALTHY TISSUE', color: '#40e0c0' },
+                    { text: 'PRODUCES NO TOXICITY. AND BECAUSE', color: '#40e0c0' },
+                    { text: 'ENZYMES CONVERT HUNDREDS OF', color: '#40e0c0' },
+                    { text: 'MOLECULES PER SECOND, THE DRUG-', color: '#40e0c0' },
+                    { text: 'ANTIBODY RATIO IS EFFECTIVELY', color: '#40e0c0' },
+                    { text: 'UNCAPPED.', color: '#40e0c0' },
+                ],
+            },
+        ],
     },
 
     // ── SHARED PROMPTS ────────────────────────────────────────

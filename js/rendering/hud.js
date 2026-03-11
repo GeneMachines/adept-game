@@ -98,8 +98,8 @@ ADEPT.HUD.prototype.render = function(game) {
         return;
     }
 
-    if (game.state === 'RESULTS_INFO') {
-        this.renderResultsInfo(ctx, game);
+    if (game.state === 'DID_YOU_KNOW') {
+        this.renderDidYouKnow(ctx, game);
         return;
     }
 
@@ -797,9 +797,8 @@ ADEPT.HUD.prototype.renderResults = function(ctx, game) {
     y += 14;
     // On mobile, HTML buttons below canvas handle RETRY/NEXT/INFO
     if (!ADEPT.Input.isMobile) {
-        this.drawText(ctx, TX.retry, 14, y, '#404860', 5);
-        this.drawText(ctx, TX.menu, 80, y, '#404860', 5);
-        this.drawText(ctx, '[I] INFO', 150, y, '#404860', 5);
+        this.drawText(ctx, TX.retry, 30, y, '#404860', 5);
+        this.drawText(ctx, TX.menu, 120, y, '#404860', 5);
 
         y += 14;
         var blink = Math.sin(Date.now() / 1000 * 3) > 0;
@@ -809,23 +808,38 @@ ADEPT.HUD.prototype.renderResults = function(ctx, game) {
     }
 };
 
-ADEPT.HUD.prototype.renderResultsInfo = function(ctx, game) {
+ADEPT.HUD.prototype.renderDidYouKnow = function(ctx, game) {
     var cx = ADEPT.Config.VIRTUAL_W / 2;
-    var modeKey = game.modeKeys[game.currentModeIndex];
-    var info = ADEPT.Text.resultsInfo[modeKey];
-    if (!info) return;
+    var DYK = ADEPT.Text.didYouKnow;
+    var card = DYK.cards[game.didYouKnowIndex];
+    if (!card) return;
 
-    // Mode title
-    this.drawTextCentered(ctx, info.title, 14, info.color || '#f0f0f0', 7);
+    // Dark overlay
+    ctx.fillStyle = 'rgba(8, 12, 20, 0.92)';
+    ctx.fillRect(0, 0, ADEPT.Config.VIRTUAL_W, ADEPT.Config.VIRTUAL_H);
 
-    // Separator
+    // Teal header
+    this.drawTextCentered(ctx, DYK.header, 14, '#40e0c0', 7);
+
+    // Decorative separator
     ctx.fillStyle = '#304060';
-    ctx.fillRect(20, 30, 216, 1);
+    ctx.fillRect(cx - 70, 30, 140, 1);
+    ctx.fillStyle = '#40e0c0';
+    ctx.fillRect(cx - 30, 30, 60, 1);
 
-    // Facts
-    var y = 38;
-    for (var i = 0; i < info.facts.length; i++) {
-        var line = info.facts[i];
+    // Mode title in mode color
+    this.drawTextCentered(ctx, card.title, 40, card.color, 7);
+
+    // Second separator
+    ctx.fillStyle = '#304060';
+    ctx.fillRect(cx - 70, 56, 140, 1);
+    ctx.fillStyle = card.color;
+    ctx.fillRect(cx - 20, 56, 40, 1);
+
+    // Fact lines — instant text (no typewriter)
+    var y = 66;
+    for (var i = 0; i < card.facts.length; i++) {
+        var line = card.facts[i];
         if (typeof line === 'string') {
             if (line === '') {
                 y += 6; // blank line = small gap
@@ -839,29 +853,15 @@ ADEPT.HUD.prototype.renderResultsInfo = function(ctx, game) {
         }
     }
 
-    // Separator before references
-    y += 4;
-    ctx.fillStyle = '#304060';
-    ctx.fillRect(20, y, 216, 1);
-    y += 8;
+    // Card counter "1 / 3"
+    var counterStr = (game.didYouKnowIndex + 1) + ' / ' + DYK.cards.length;
+    this.drawTextCentered(ctx, counterStr, 190, '#505060', 5);
 
-    // References header
-    this.drawText(ctx, 'REFERENCES:', 14, y, '#505060', 5);
-    y += 10;
-
-    for (var i = 0; i < info.refs.length; i++) {
-        var ref = info.refs[i];
-        var refText = (i + 1) + '. ' + ref;
-        this.drawText(ctx, refText, 14, y, '#505060', 5);
-        y += 10;
+    // Blinking "PRESS ANY KEY" prompt
+    var blink = Math.sin(Date.now() / 1000 * 3) > 0;
+    if (blink) {
+        this.drawTextCentered(ctx, ADEPT.Text.prompts.pressAnyKey, 204, '#e0e040', 5);
     }
-
-    // Bottom separator + back prompt
-    y += 4;
-    ctx.fillStyle = '#304060';
-    ctx.fillRect(20, y, 216, 1);
-    y += 10;
-    this.drawTextCentered(ctx, ADEPT.Text.prompts.back, y, '#404860', 5);
 };
 
 ADEPT.HUD.prototype.renderEnding = function(ctx, game) {

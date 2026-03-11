@@ -56,7 +56,7 @@ ADEPT.Input = function(canvas) {
         if (e.code === 'KeyN') self.selectedOption = 11; // next
         if (e.code === 'KeyM') self.selectedOption = 12; // menu
         if (e.code === 'KeyL') self.selectedOption = 13; // lab bench
-        if (e.code === 'KeyI') self.selectedOption = 14; // info
+        if (e.code === 'KeyI') self.selectedOption = 14; // how to play (menu)
         if (e.code === 'Escape') { self.escPressed = true; self.selectedOption = 12; }
         if (e.code === 'ArrowUp') { e.preventDefault(); self.arrowUp = true; }
         if (e.code === 'ArrowDown') { e.preventDefault(); self.arrowDown = true; }
@@ -189,8 +189,6 @@ ADEPT.Input.prototype.setupHTMLButtons = function() {
     this.resultsBtns = document.getElementById('results-btns');
     this.btnRetry = document.getElementById('btn-retry');
     this.btnNext  = document.getElementById('btn-next');
-    this.btnInfo  = document.getElementById('btn-info');
-
     this.btnRetry.addEventListener('touchstart', function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -202,13 +200,6 @@ ADEPT.Input.prototype.setupHTMLButtons = function() {
         e.preventDefault();
         e.stopPropagation();
         self.anyKey = true; // same as spacebar — advances to next mode
-    });
-
-    this.btnInfo.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        self.selectedOption = 14;
-        self.anyKey = true;
     });
 };
 
@@ -282,8 +273,7 @@ ADEPT.Input.prototype.updateHTMLButtons = function(state) {
 
             // Show back button on screens that support ESC
             var showBack = (state === 'MENU' || state === 'STAGE_SELECT' ||
-                            state === 'LAB_BENCH' || state === 'HOW_TO_PLAY' ||
-                            state === 'RESULTS_INFO');
+                            state === 'LAB_BENCH' || state === 'HOW_TO_PLAY');
             if (showBack) {
                 controls.style.display = 'flex';
                 this.btnBack.style.display = '';
@@ -336,14 +326,11 @@ ADEPT.Input.prototype.handleCanvasTouch = function(vx, vy) {
         case 'RESULTS':
             // Hit-test the option buttons at the bottom
             if (vy > 160 && vy < 210) {
-                if (vx < 75) {
+                if (vx < 128) {
                     this.selectedOption = 10; // R - retry
                     this.anyKey = true;
-                } else if (vx < 145) {
-                    this.selectedOption = 12; // M - menu
-                    this.anyKey = true;
                 } else {
-                    this.selectedOption = 14; // I - info
+                    this.selectedOption = 12; // M - menu
                     this.anyKey = true;
                 }
             } else {
@@ -369,7 +356,7 @@ ADEPT.Input.prototype.handleCanvasTouch = function(vx, vy) {
 
         default:
             // TITLE, NARRATIVE, GAME_OVER, ENDING, MODE_INTRO,
-            // RESULTS_INFO, HOW_TO_PLAY, PLAYING — any canvas touch = anyKey
+            // DID_YOU_KNOW, HOW_TO_PLAY, PLAYING — any canvas touch = anyKey
             this.anyKey = true;
             break;
     }

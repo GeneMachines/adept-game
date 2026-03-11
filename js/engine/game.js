@@ -6,7 +6,8 @@ ADEPT.Game = function(canvas) {
     this.input = new ADEPT.Input(canvas);
     this.hud = new ADEPT.HUD();
 
-    this.state = 'TITLE'; // TITLE, NARRATIVE, MENU, STAGE_SELECT, LAB_BENCH, HOW_TO_PLAY, MODE_INTRO, PLAYING, GAME_OVER, RESULTS, RESULTS_INFO, ENDING
+    this.state = 'TITLE'; // TITLE, NARRATIVE, MENU, STAGE_SELECT, LAB_BENCH, HOW_TO_PLAY, MODE_INTRO, PLAYING, GAME_OVER, RESULTS, DID_YOU_KNOW, ENDING
+    this.didYouKnowIndex = 0;
     this.mode = null;
     this.entities = [];
     this.tumor = null;
@@ -227,18 +228,14 @@ ADEPT.Game.prototype.update = function(dt) {
                 this.startMode(this.currentModeIndex, this.currentStage);
             } else if (opt === 12) { // M - menu
                 this.state = 'MENU';
-            } else if (opt === 14) { // I - info
-                this.input.consumeAnyKey();
-                this.state = 'RESULTS_INFO';
             } else if (this.resultsTimer > 0.5) {
                 if (this.input.consumeAnyKey()) {
                     // Spacebar / any key → advance to next mode (or boss/ending)
                     if (this.currentModeIndex === 2) {
                         if (this.currentStage === 4 && this.result && this.result.tumorKilled) {
-                            // Boss beaten! → play ENDING as reward
-                            this.endingTimer = 0;
-                            this.textCrawlComplete = false;
-                            this.state = 'ENDING';
+                            // Boss beaten! → show Did You Know cards before ending
+                            this.didYouKnowIndex = 0;
+                            this.state = 'DID_YOU_KNOW';
                         } else if (this.currentStage === 1 && this.isStageUnlocked(2, 4)) {
                             // ADEPT Stage I done, boss unlocked → auto-start boss
                             this.startMode(2, 4);
@@ -269,13 +266,15 @@ ADEPT.Game.prototype.update = function(dt) {
             if (this.input.chargeReleased) this.input.consumeCharge();
             break;
 
-        case 'RESULTS_INFO':
-            if (this.input.consumeEsc()) {
-                this.input.consumeOption();
-                this.input.consumeAnyKey();
-                this.state = 'RESULTS';
-            } else if (this.input.consumeAnyKey()) {
-                this.state = 'RESULTS';
+        case 'DID_YOU_KNOW':
+            if (this.input.consumeAnyKey()) {
+                this.didYouKnowIndex++;
+                if (this.didYouKnowIndex >= ADEPT.Text.didYouKnow.cards.length) {
+                    // All cards shown → play ending
+                    this.endingTimer = 0;
+                    this.textCrawlComplete = false;
+                    this.state = 'ENDING';
+                }
             }
             if (this.input.chargeReleased) this.input.consumeCharge();
             break;
@@ -285,7 +284,7 @@ ADEPT.Game.prototype.update = function(dt) {
 ADEPT.Game.prototype.render = function(dt) {
     this.renderer.clear();
 
-    if (this.state === 'TITLE' || this.state === 'NARRATIVE' || this.state === 'MENU' || this.state === 'STAGE_SELECT' || this.state === 'LAB_BENCH' || this.state === 'HOW_TO_PLAY' || this.state === 'RESULTS' || this.state === 'RESULTS_INFO' || this.state === 'GAME_OVER' || this.state === 'ENDING') {
+    if (this.state === 'TITLE' || this.state === 'NARRATIVE' || this.state === 'MENU' || this.state === 'STAGE_SELECT' || this.state === 'LAB_BENCH' || this.state === 'HOW_TO_PLAY' || this.state === 'RESULTS' || this.state === 'DID_YOU_KNOW' || this.state === 'GAME_OVER' || this.state === 'ENDING') {
         this.hud.render(this);
         this.renderer.present();
         return;
