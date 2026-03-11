@@ -1,7 +1,7 @@
 window.ADEPT = window.ADEPT || {};
 
 ADEPT.Scoring = {
-    calculate: function(tumorKilled, cuttlefishAlive, totalCuttlefish, dosesUsed, roundTime) {
+    calculate: function(tumorKilled, cuttlefishAlive, totalCuttlefish, dosesUsed, roundTime, tumorDmg, cuttleDmg) {
         var tumorScore = tumorKilled ? 500 : 0;
         var cuttleScore = cuttlefishAlive * 100;
         var maxDoses = 5;
@@ -10,11 +10,16 @@ ADEPT.Scoring = {
         var efficiencyScore = Math.floor(efficiencyRatio * 100 + timeBonus);
         var score = tumorScore + cuttleScore + efficiencyScore;
 
-        // Therapeutic index: targeting precision (0-100%)
-        // Measures how well you killed the target without harming healthy cells
+        // Therapeutic index: ratio of tumor damage to total damage (0-100%)
+        // TI = tumorDmg / (tumorDmg + cuttlefishDmg) — higher = more selective
         var therapeuticIndex = 0;
-        if (tumorKilled) {
-            therapeuticIndex = Math.round((cuttlefishAlive / totalCuttlefish) * 100);
+        tumorDmg = tumorDmg || 0;
+        cuttleDmg = cuttleDmg || 0;
+        var totalDmg = tumorDmg + cuttleDmg;
+        if (totalDmg > 0) {
+            therapeuticIndex = Math.round((tumorDmg / totalDmg) * 100);
+        } else if (tumorKilled) {
+            therapeuticIndex = 100; // no damage dealt but tumor died (shouldn't happen)
         }
 
         var stars = 0;

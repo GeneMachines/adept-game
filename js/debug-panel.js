@@ -27,7 +27,7 @@ ADEPT.Balance = {
 ADEPT.ModeConfigs = {
     chemo: { maxMolecules: 120, tumorHp: 80 },
     adc: { maxMolecules: 30, tumorHp: 100 },
-    adept: { maxMolecules: 60, prodrugMax: 100, tumorHp: 100 },
+    adept: { maxMolecules: 90, prodrugMax: 150, tumorHp: 100 },
 };
 
 ADEPT.DebugPanel = {

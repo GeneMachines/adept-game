@@ -5,6 +5,7 @@ ADEPT.ModeBase = function(config) {
     this.description = config.description || '';
     this.maxMolecules = config.maxMolecules || 20;
     this.cuttlefishCount = config.cuttlefishCount || 5;
+    this.tumorCount = config.tumorCount || 1;
     this.tumorHp = config.tumorHp || 100;
     this.stage = config.stage || 1;
     this.roundTimer = 0;
@@ -26,14 +27,33 @@ ADEPT.ModeBase.prototype.setup = function(game) {
     game.entities = [];
     var T = ADEPT.Config.TANK;
 
-    // Spawn tumor at random position
-    var tx = T.LEFT + 30 + Math.random() * (T.RIGHT - T.LEFT - 60);
-    var ty = T.TOP + 25 + Math.random() * (T.CENTER_Y - T.TOP - 25);
-    var tumor = new ADEPT.Tumor(tx, ty);
-    tumor.hp = this.tumorHp;
-    tumor.maxHp = this.tumorHp;
-    game.addEntity(tumor);
-    game.tumor = tumor;
+    // Spawn tumor(s)
+    if (this.tumorCount >= 2) {
+        // Multiple tumors — place in left/right halves of tank upper area
+        var tx1 = T.LEFT + 20 + Math.random() * (T.CENTER_X - T.LEFT - 35);
+        var ty1 = T.TOP + 25 + Math.random() * (T.CENTER_Y - T.TOP - 25);
+        var tumor1 = new ADEPT.Tumor(tx1, ty1);
+        tumor1.hp = this.tumorHp;
+        tumor1.maxHp = this.tumorHp;
+        game.addEntity(tumor1);
+        game.tumor = tumor1; // primary — metastasis beam source
+
+        var tx2 = T.CENTER_X + 15 + Math.random() * (T.RIGHT - T.CENTER_X - 55);
+        var ty2 = T.TOP + 25 + Math.random() * (T.CENTER_Y - T.TOP - 25);
+        var tumor2 = new ADEPT.Tumor(tx2, ty2);
+        tumor2.hp = this.tumorHp;
+        tumor2.maxHp = this.tumorHp;
+        game.addEntity(tumor2);
+    } else {
+        // Single tumor — original placement
+        var tx = T.LEFT + 30 + Math.random() * (T.RIGHT - T.LEFT - 60);
+        var ty = T.TOP + 25 + Math.random() * (T.CENTER_Y - T.TOP - 25);
+        var tumor = new ADEPT.Tumor(tx, ty);
+        tumor.hp = this.tumorHp;
+        tumor.maxHp = this.tumorHp;
+        game.addEntity(tumor);
+        game.tumor = tumor;
+    }
 
     // Spawn cuttlefish at random positions (avoiding tumor area)
     for (var i = 0; i < this.cuttlefishCount; i++) {

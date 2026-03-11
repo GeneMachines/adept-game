@@ -1,13 +1,15 @@
 window.ADEPT = window.ADEPT || {};
 
 ADEPT.ModeADEPT = function(stage) {
+    var s = stage || 1;
     ADEPT.ModeBase.call(this, {
         name: 'ADEPT',
         description: 'Two-phase pretargeting. Phase 1: deploy antibody-enzyme conjugates that stick to the crown of thorns. Wait for off-target enzymes to clear. Phase 2: deploy harmless prodrug that only activates at the enzyme.',
         maxMolecules: 30,
-        cuttlefishCount: 5,
+        cuttlefishCount: s === 4 ? 8 : 5,
+        tumorCount:      s === 4 ? 2 : 1,
         tumorHp: 100,
-        stage: stage || 1,
+        stage: s,
     });
     this.phase = 1; // 1=deploy AE, 2=waiting/ready for prodrug, 4=prodrug deployed
     this.prodrugMax = 50;
@@ -24,8 +26,8 @@ ADEPT.ModeADEPT.prototype.update = function(dt, game) {
     if (this.phase === 1) {
         // Phase 1: deploy AB-enzyme (can do multiple doses)
         game.input.consumePhase2(); // clear stale enzyme toggle
-        if (game.input.consumeProdrugToggle() && this.aeDoses > 0) {
-            // Toggle back to prodrug mode
+        if (game.input.consumeProdrugToggle() && (this.stage === 4 || this.aeDoses > 0)) {
+            // Toggle to prodrug mode (boss: anytime, normal: after first enzyme dose)
             this.phase = 2;
             if (ADEPT.Sound) ADEPT.Sound.play('phaseToggle');
         } else if (game.input.chargeReleased) {
@@ -43,7 +45,7 @@ ADEPT.ModeADEPT.prototype.update = function(dt, game) {
     } else if (this.phase === 2) {
         // Waiting/ready phase — player can deploy prodrug OR toggle back to enzyme
         game.input.consumeProdrugToggle(); // clear stale prodrug toggle
-        if (game.input.consumePhase2() && this.aeDoses < this.maxAEDoses) {
+        if (game.input.consumePhase2() && (this.stage === 4 || this.aeDoses < this.maxAEDoses)) {
             // Toggle to enzyme mode for another AB-enzyme dose
             this.phase = 1;
             if (ADEPT.Sound) ADEPT.Sound.play('phaseToggle');
@@ -57,15 +59,31 @@ ADEPT.ModeADEPT.prototype.update = function(dt, game) {
             }
         }
     } else if (this.phase === 4) {
-        // Can deploy more prodrug (locked out of enzyme)
-        game.input.consumePhase2(); // clear stale
-        game.input.consumeProdrugToggle(); // clear stale
-        if (game.input.chargeReleased) {
-            var charge = game.input.consumeCharge();
-            if (charge > 0.05) {
-                this.deployProdrug(charge, game);
-                this.dosesUsed++;
-                if (ADEPT.Sound) ADEPT.Sound.play('deploy');
+        if (this.stage === 4) {
+            // Boss mode: free toggling — can switch back to enzyme anytime
+            game.input.consumeProdrugToggle(); // clear stale
+            if (game.input.consumePhase2()) {
+                this.phase = 1;
+                if (ADEPT.Sound) ADEPT.Sound.play('phaseToggle');
+            } else if (game.input.chargeReleased) {
+                var charge = game.input.consumeCharge();
+                if (charge > 0.05) {
+                    this.deployProdrug(charge, game);
+                    this.dosesUsed++;
+                    if (ADEPT.Sound) ADEPT.Sound.play('deploy');
+                }
+            }
+        } else {
+            // Normal mode: locked out of enzyme
+            game.input.consumePhase2(); // clear stale
+            game.input.consumeProdrugToggle(); // clear stale
+            if (game.input.chargeReleased) {
+                var charge = game.input.consumeCharge();
+                if (charge > 0.05) {
+                    this.deployProdrug(charge, game);
+                    this.dosesUsed++;
+                    if (ADEPT.Sound) ADEPT.Sound.play('deploy');
+                }
             }
         }
     }

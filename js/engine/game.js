@@ -23,6 +23,10 @@ ADEPT.Game = function(canvas) {
     this.resultsTimer = 0;
     this.textCrawlComplete = false;
 
+    // Damage tracking for therapeutic index
+    this.tumorDamageTotal = 0;
+    this.cuttlefishDamageTotal = 0;
+
     this.TICK_RATE = 60;
     this.TICK_MS = 1000 / this.TICK_RATE;
     this.MAX_FRAME_SKIP = 5;
@@ -99,6 +103,10 @@ ADEPT.Game.prototype.update = function(dt) {
             if (opt === 0 || opt === 1 || opt === 2) {
                 if (ADEPT.Sound) ADEPT.Sound.play('menuSelect');
                 this.startMode(opt, 1); // Skip stage select, go straight to Stage I
+            } else if (opt === 3 && this.isStageUnlocked(2, 4)) {
+                // Boss level — ADEPT Stage IV
+                if (ADEPT.Sound) ADEPT.Sound.play('menuSelect');
+                this.startMode(2, 4);
             } else if (opt === 14) { // I - info
                 this.state = 'HOW_TO_PLAY';
             }
@@ -224,11 +232,20 @@ ADEPT.Game.prototype.update = function(dt) {
                 this.state = 'RESULTS_INFO';
             } else if (this.resultsTimer > 0.5) {
                 if (this.input.consumeAnyKey()) {
-                    // Spacebar / any key → advance to next mode (or ending)
+                    // Spacebar / any key → advance to next mode (or boss/ending)
                     if (this.currentModeIndex === 2) {
-                        this.endingTimer = 0;
-                        this.textCrawlComplete = false;
-                        this.state = 'ENDING';
+                        if (this.currentStage === 4 && this.result && this.result.tumorKilled) {
+                            // Boss beaten! → play ENDING as reward
+                            this.endingTimer = 0;
+                            this.textCrawlComplete = false;
+                            this.state = 'ENDING';
+                        } else if (this.currentStage === 1 && this.isStageUnlocked(2, 4)) {
+                            // ADEPT Stage I done, boss unlocked → auto-start boss
+                            this.startMode(2, 4);
+                        } else {
+                            // Boss not unlocked, or boss lost → menu
+                            this.state = 'MENU';
+                        }
                     } else {
                         var next = this.currentModeIndex + 1;
                         this.startMode(next, this.currentStage);
@@ -244,7 +261,7 @@ ADEPT.Game.prototype.update = function(dt) {
             this.endingTimer += dt;
             if (this.input.consumeAnyKey()) {
                 if (this.textCrawlComplete) {
-                    this.state = 'MENU';
+                    this.state = 'MENU'; // Always return to menu after ending
                 } else {
                     this.endingTimer = 999;
                 }
@@ -296,6 +313,8 @@ ADEPT.Game.prototype.startMode = function(index, stage) {
     this.currentStage = stage || 1;
     this.score = 0;
     this.result = null;
+    this.tumorDamageTotal = 0;
+    this.cuttlefishDamageTotal = 0;
 
     switch (index) {
         case 0: this.mode = new ADEPT.ModeChemo(this.currentStage); break;
@@ -385,6 +404,15 @@ ADEPT.Game.prototype.isStageUnlocked = function(modeIndex, stage) {
     }
 };
 
+ADEPT.Game.prototype.isStageBeat = function(modeIndex, stage) {
+    try {
+        var key = 'adept_' + this.modeKeys[modeIndex] + '_s' + stage + '_beat';
+        return localStorage.getItem(key) === '1';
+    } catch (e) {
+        return false;
+    }
+};
+
 ADEPT.Game.prototype.saveProgress = function(modeIndex, stage, tumorKilled) {
     if (!tumorKilled) return;
     try {
@@ -407,7 +435,8 @@ ADEPT.Game.prototype.endRound = function(tumorKilled) {
     var total = this.getCuttlefishTotal();
     this.result = ADEPT.Scoring.calculate(
         tumorKilled, alive, total,
-        this.mode.dosesUsed, this.mode.roundTimer
+        this.mode.dosesUsed, this.mode.roundTimer,
+        this.tumorDamageTotal, this.cuttlefishDamageTotal
     );
     this.score = this.result.score;
     this.saveProgress(this.currentModeIndex, this.currentStage, tumorKilled);

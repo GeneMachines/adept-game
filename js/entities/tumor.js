@@ -77,6 +77,9 @@ ADEPT.Tumor.prototype.damage = function(amount) {
     if (this.hp <= 0) return;
     this.hp -= amount;
     this.damageFlash = 0.15;
+    // Track cumulative damage for therapeutic index
+    var gi = ADEPT.gameInstance;
+    if (gi) gi.tumorDamageTotal += amount;
     if (this.hp <= 0) {
         this.hp = 0;
     }

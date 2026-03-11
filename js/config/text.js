@@ -45,9 +45,10 @@ ADEPT.Text = {
     menu: {
         header: 'SELECT MODE',
         modes: [
-            { key: '1', name: 'SYSTEMIC CHEMO', desc: 'Floods the tank with toxin',  color: '#ff4040', bg: '#1a0808' },
+            { key: '1', name: 'CHEMO',          desc: 'Floods the tank with toxin',  color: '#ff4040', bg: '#1a0808' },
             { key: '2', name: 'ADC',            desc: 'Antibody-drug conjugate',      color: '#40e040', bg: '#081a08' },
             { key: '3', name: 'ADEPT',          desc: 'Enzyme-prodrug system',        color: '#a040e0', bg: '#10081a' },
+            { key: '4', name: 'BOSS LEVEL',     desc: 'Metastatic ADEPT challenge',   color: '#e040c0', bg: '#1a0818' },
         ],
         howToPlay: '[I] HOW TO PLAY',
         hint:      'PRESS 1, 2 OR 3',
@@ -58,25 +59,28 @@ ADEPT.Text = {
     // Plain strings = default gray. { text, color } = emphasis.
     intro: {
         chemo: [
-            'THE CROWN OF THORNS IS WEAK',
-            'AGAINST CHEMICAL X.',
-            { text: 'KILL THE INVADER!', color: '#e0e040' },
-            { text: 'PROTECT THE CUTTLEFISH!', color: '#e06040' },
-            { text: 'BUT CHEMO HURTS EVERYTHING!', color: '#ff4040' },
+            'THE CROWN OF THORNS THREATENS',
+            'THE REEF AND ALL WHO LIVE THERE.',
+            'CHEMICAL X CAN DESTROY IT.',
+            { text: 'FLOOD THE TANK.', color: '#e0e040' },
         ],
         adc: [
-            'CHEMICAL X WORKED BUT WAS',
-            'INDISCRIMINATE.',
-            { text: 'THE ADC TARGETS THE INVADER', color: '#40e0c0' },
-            { text: 'AND DELIVERS PAYLOAD DIRECTLY.', color: '#40e0c0' },
-            { text: 'BUT SOME PAYLOAD STILL LEAKS...', color: '#e0a040' },
+            'CHEMICAL X WAS TOO RECKLESS.',
+            'THE ADC CARRIES ITS PAYLOAD',
+            'STRAIGHT TO THE INVADER.',
+            { text: 'A TARGETED STRIKE.', color: '#e0e040' },
         ],
         adept: [
             'THE ADC STILL CAUSED DAMAGE.',
-            { text: 'SPLIT TARGETING FROM PAYLOAD!', color: '#40e0c0' },
-            { text: 'A TWO-STAGE SYSTEM:', color: '#e0e040' },
-            { text: '1. AB-ENZYME MARKS THE TARGET', color: '#a040e0' },
-            { text: '2. PRODRUG ACTIVATES AT THE MARK', color: '#ff4040' },
+            'WHAT IF TARGETING AND PAYLOAD',
+            'WERE SEPARATED?',
+            { text: 'MARK FIRST. THEN STRIKE.', color: '#e0e040' },
+        ],
+        boss: [
+            'THE INVASION HAS BEEN PUSHED BACK.',
+            'BUT DEEP IN THE REEF,',
+            'THE SOURCE STILL GROWS.',
+            { text: 'FINISH IT ONCE AND FOR ALL.', color: '#e0e040' },
         ],
         // Controls shown below narrative text
         controls: {

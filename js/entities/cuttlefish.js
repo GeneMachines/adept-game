@@ -81,6 +81,9 @@ ADEPT.Cuttlefish.prototype.damage = function(amount) {
     if (this.hp <= 0) return;
     this.hp -= amount;
     this.damageFlash = 0.2;
+    // Track cumulative damage for therapeutic index
+    var gi = ADEPT.gameInstance;
+    if (gi) gi.cuttlefishDamageTotal += amount;
     if (this.hp <= 0) {
         this.hp = 0;
         this.deathTimer = 0;

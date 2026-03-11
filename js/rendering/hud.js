@@ -111,9 +111,9 @@ ADEPT.HUD.prototype.render = function(game) {
     // Top bar - mode name + stage label
     var modeName = game.mode ? game.mode.name : '';
     if (game.mode && game.mode.stage === 4) {
-        modeName += ' IV';
+        modeName = 'BOSS LEVEL';
     }
-    this.drawText(ctx, modeName, T.LEFT, 4, '#f0f0f0', 5);
+    this.drawText(ctx, modeName, T.LEFT, 4, game.mode && game.mode.stage === 4 ? '#e040c0' : '#f0f0f0', 5);
 
     // Score (right-aligned)
     var scoreStr = 'SCORE ' + String(game.score).padStart(4, '0');
@@ -188,17 +188,24 @@ ADEPT.HUD.prototype.render = function(game) {
     // ADEPT phase indicator
     if (game.mode && game.mode.phase !== undefined) {
         var phaseY = hudY + 12;
+        var isBoss = game.mode.stage === 4;
         if (game.mode.phase === 1) {
-            var doseStr = game.mode.aeDoses ? ' (' + game.mode.aeDoses + '/' + game.mode.maxAEDoses + ')' : '';
-            this.drawText(ctx, HT.phase1 + doseStr, T.LEFT, phaseY, '#a040e0', 5);
+            this.drawText(ctx, HT.phase1, T.LEFT, phaseY, '#a040e0', 5);
+            if (isBoss) {
+                this.drawText(ctx, HT.phase2prodrug, T.LEFT, phaseY + 10, '#808890', 5);
+            }
         } else if (game.mode.phase === 2) {
             this.drawText(ctx, HT.phase2, T.LEFT, phaseY, '#e0a040', 5);
             this.drawText(ctx, HT.phase2prodrug, T.LEFT, phaseY + 10, '#808890', 5);
-            if (game.mode.aeDoses < game.mode.maxAEDoses) {
+            if (isBoss || game.mode.aeDoses < game.mode.maxAEDoses) {
                 this.drawText(ctx, HT.phase2enzyme, T.LEFT + 90, phaseY + 10, '#a040e0', 5);
             }
         } else if (game.mode.phase === 4) {
             this.drawText(ctx, HT.phase4, T.LEFT, phaseY, '#ff4040', 5);
+            if (game.mode.stage === 4) {
+                // Boss mode: show enzyme toggle hint
+                this.drawText(ctx, HT.phase2enzyme, T.LEFT, phaseY + 10, '#a040e0', 5);
+            }
         }
     } else if (game.mode) {
         // Non-ADEPT modes
@@ -369,6 +376,7 @@ ADEPT.HUD.prototype.renderNarrative = function(ctx, game) {
 ADEPT.HUD.prototype.renderMenu = function(ctx) {
     var cx = ADEPT.Config.VIRTUAL_W / 2;
     var t = Date.now() / 1000;
+    var game = ADEPT.gameInstance;
 
     // Header
     var TX = ADEPT.Text.menu;
@@ -382,51 +390,49 @@ ADEPT.HUD.prototype.renderMenu = function(ctx) {
 
     // Mode cards — big names with colored left borders
     var modes = TX.modes;
+    var bossUnlocked = game && game.isStageUnlocked(2, 4);
 
     var cardX = 18;
     var cardW = 220;
-    var cardH = 34;
+    var cardH = 28;
     var startY = 48;
-    var gap = 42;
+    var gap = 36;
 
     for (var i = 0; i < modes.length; i++) {
         var m = modes[i];
         var y = startY + i * gap;
+        var isBoss = (i === 3);
+        var locked = isBoss && !bossUnlocked;
 
         // Card background
-        ctx.fillStyle = m.bg;
+        ctx.fillStyle = locked ? '#0a0a10' : m.bg;
         ctx.fillRect(cardX, y, cardW, cardH);
 
         // Left color border (3px wide)
-        ctx.fillStyle = m.color;
+        ctx.fillStyle = locked ? '#201820' : m.color;
         ctx.fillRect(cardX, y, 3, cardH);
 
         // Key number (big)
-        this.drawText(ctx, m.key, cardX + 8, y + 4, m.color, 7);
+        this.drawText(ctx, m.key, cardX + 8, y + 3, locked ? '#302030' : m.color, 7);
 
         // Mode name (big)
-        this.drawText(ctx, m.name, cardX + 22, y + 4, m.color, 7);
+        this.drawText(ctx, m.name, cardX + 22, y + 3, locked ? '#302030' : m.color, 7);
 
         // Description (small)
-        this.drawText(ctx, m.desc, cardX + 22, y + 22, '#606080', 5);
+        var descText = locked ? 'Beat all 3 modes to unlock' : m.desc;
+        this.drawText(ctx, descText, cardX + 22, y + 18, locked ? '#201820' : '#606080', 5);
     }
 
     // Decorative line
+    var bottomY = startY + modes.length * gap;
     ctx.fillStyle = '#304060';
-    ctx.fillRect(cx - 70, startY + 3 * gap - 2, 140, 1);
+    ctx.fillRect(cx - 70, bottomY - 2, 140, 1);
 
-    this.drawTextCentered(ctx, TX.howToPlay, startY + 3 * gap + 10, '#40e0c0', 5);
+    this.drawTextCentered(ctx, TX.howToPlay, bottomY + 8, '#40e0c0', 5);
 
-    var hintText = ADEPT.Input.isMobile ? 'TAP TO SELECT' : TX.hint;
-    this.drawTextCentered(ctx, hintText, startY + 3 * gap + 28, '#808890', 5);
-    this.drawTextCentered(ctx, ADEPT.Text.prompts.back, startY + 3 * gap + 40, '#404860', 5);
-
-    // Animated cuttlefish behind menu
-    var fishX = cx + Math.sin(t * 0.5) * 40;
-    var fishY = 210 + Math.sin(t * 0.8) * 5;
-    ctx.fillStyle = 'rgba(224, 96, 64, 0.3)';
-    ctx.fillRect(Math.round(fishX) - 5, Math.round(fishY) - 3, 10, 7);
-    ctx.fillRect(Math.round(fishX) - 6, Math.round(fishY) - 2, 12, 5);
+    var hintText = ADEPT.Input.isMobile ? 'TAP TO SELECT' : (bossUnlocked ? 'PRESS 1, 2, 3 OR 4' : TX.hint);
+    this.drawTextCentered(ctx, hintText, bottomY + 22, '#808890', 5);
+    this.drawTextCentered(ctx, ADEPT.Text.prompts.back, bottomY + 34, '#404860', 5);
 };
 
 ADEPT.HUD.prototype.renderStageSelect = function(ctx, game) {
@@ -607,9 +613,13 @@ ADEPT.HUD.prototype.renderIntro = function(ctx, game) {
     var modeName = game.mode ? game.mode.name : '';
     var t = game.modeIntroTimer || 0;
 
+    // Boss level overrides
+    var isBoss = game.mode && game.mode.stage === 4;
+    if (isBoss) modeName = 'BOSS LEVEL';
+
     // Mode colors
-    var modeColors = { 'SYSTEMIC CHEMO': '#ff4040', 'ADC': '#40e040', 'ADEPT': '#a040e0' };
-    var modeBgs = { 'SYSTEMIC CHEMO': 'rgba(180,0,0,', 'ADC': 'rgba(0,140,0,', 'ADEPT': 'rgba(100,0,160,' };
+    var modeColors = { 'SYSTEMIC CHEMO': '#ff4040', 'ADC': '#40e040', 'ADEPT': '#a040e0', 'BOSS LEVEL': '#e040c0' };
+    var modeBgs = { 'SYSTEMIC CHEMO': 'rgba(180,0,0,', 'ADC': 'rgba(0,140,0,', 'ADEPT': 'rgba(100,0,160,', 'BOSS LEVEL': 'rgba(160,0,120,' };
     var col = modeColors[modeName] || '#f0f0f0';
     var bgBase = modeBgs[modeName] || 'rgba(100,100,100,';
 
@@ -634,8 +644,8 @@ ADEPT.HUD.prototype.renderIntro = function(ctx, game) {
 
     // Stage label
     if (t > 0.15) {
-        if (game.mode && game.mode.stage === 4) {
-            this.drawTextCentered(ctx, 'STAGE IV', titleY + 20, '#e040c0', 5);
+        if (isBoss) {
+            this.drawTextCentered(ctx, 'STAGE IV - METASTASIS', titleY + 20, '#e040c0', 5);
         } else {
             this.drawTextCentered(ctx, 'STAGE I', titleY + 20, '#808890', 5);
         }
@@ -652,7 +662,7 @@ ADEPT.HUD.prototype.renderIntro = function(ctx, game) {
 
         // Build narrative lines from ADEPT.Text config
         var TX = ADEPT.Text.intro;
-        var modeKey = modeName === 'SYSTEMIC CHEMO' ? 'chemo' : modeName === 'ADC' ? 'adc' : 'adept';
+        var modeKey = isBoss ? 'boss' : modeName === 'SYSTEMIC CHEMO' ? 'chemo' : modeName === 'ADC' ? 'adc' : 'adept';
         var textDef = TX[modeKey] || [];
         var narrativeLines = [];
         for (var ni = 0; ni < textDef.length; ni++) {
@@ -676,7 +686,7 @@ ADEPT.HUD.prototype.renderIntro = function(ctx, game) {
         if (crawlElapsed > crawlDuration + 0.3) {
             var isMobile = ADEPT.Input && ADEPT.Input.isMobile;
             var controlKey;
-            if (modeKey === 'adept') {
+            if (modeKey === 'adept' || modeKey === 'boss') {
                 controlKey = isMobile ? 'adeptMobile' : 'adept';
             } else {
                 controlKey = isMobile ? 'defaultMobile' : 'default';
@@ -712,10 +722,10 @@ ADEPT.HUD.prototype.renderResults = function(ctx, game) {
     if (!result) return;
 
     var TX = ADEPT.Text.results;
-    var modeName = game.mode ? game.mode.name : '';
-    var stageStr = game.currentStage === 4 ? ' - STAGE IV' : ' - STAGE I';
+    var modeName = game.currentStage === 4 ? 'BOSS LEVEL' : (game.mode ? game.mode.name : '');
+    var stageStr = game.currentStage === 4 ? '' : ' - STAGE I';
     this.drawTextCentered(ctx, TX.header, 14, '#f0f0f0', 7);
-    this.drawTextCentered(ctx, modeName + stageStr, 30, '#808090', 5);
+    this.drawTextCentered(ctx, modeName + stageStr, 30, game.currentStage === 4 ? '#e040c0' : '#808090', 5);
 
     ctx.fillStyle = '#304060';
     ctx.fillRect(30, 40, 196, 1);

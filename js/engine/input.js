@@ -24,11 +24,12 @@ ADEPT.Input = function(canvas) {
 
     // Touch button regions for canvas taps (virtual coordinates)
     this.touchZones = {
-        // MENU state cards (match renderMenu: startY=48, gap=42, cardH=34)
-        menuCard0: { x: 18, y: 48,  w: 220, h: 34 },
-        menuCard1: { x: 18, y: 90,  w: 220, h: 34 },
-        menuCard2: { x: 18, y: 132, w: 220, h: 34 },
-        menuHelp:  { x: 40, y: 170, w: 176, h: 16 },
+        // MENU state cards (match renderMenu: startY=48, gap=36, cardH=28)
+        menuCard0: { x: 18, y: 48,  w: 220, h: 28 },
+        menuCard1: { x: 18, y: 84,  w: 220, h: 28 },
+        menuCard2: { x: 18, y: 120, w: 220, h: 28 },
+        menuCard3: { x: 18, y: 156, w: 220, h: 28 },
+        menuHelp:  { x: 40, y: 190, w: 176, h: 16 },
         // STAGE_SELECT
         stage1: { x: 38, y: 86,  w: 180, h: 28 },
         stage2: { x: 38, y: 126, w: 180, h: 28 },
@@ -50,6 +51,7 @@ ADEPT.Input = function(canvas) {
         if (e.code === 'Digit1' || e.code === 'Numpad1') self.selectedOption = 0;
         if (e.code === 'Digit2' || e.code === 'Numpad2') self.selectedOption = 1;
         if (e.code === 'Digit3' || e.code === 'Numpad3') self.selectedOption = 2;
+        if (e.code === 'Digit4' || e.code === 'Numpad4') self.selectedOption = 3;
         if (e.code === 'KeyR') self.selectedOption = 10; // retry
         if (e.code === 'KeyN') self.selectedOption = 11; // next
         if (e.code === 'KeyM') self.selectedOption = 12; // menu
@@ -245,18 +247,22 @@ ADEPT.Input.prototype.updateHTMLButtons = function(state) {
                 this.btnProdrug.classList.add('active');
                 this.btnProdrug.classList.remove('disabled');
                 this.btnEnzyme.classList.remove('active');
-                if (maxed) {
+                if (maxed && game.mode.stage !== 4) {
                     this.btnEnzyme.classList.add('disabled');
                 } else {
                     this.btnEnzyme.classList.remove('disabled');
                 }
             } else if (phase === 4) {
-                // Prodrug locked — red pill, enzyme disabled
+                // Prodrug active — enzyme disabled unless boss mode
                 toggle.classList.add('prodrug-active');
                 this.btnProdrug.classList.add('active');
                 this.btnProdrug.classList.remove('disabled');
                 this.btnEnzyme.classList.remove('active');
-                this.btnEnzyme.classList.add('disabled');
+                if (game.mode.stage === 4) {
+                    this.btnEnzyme.classList.remove('disabled');
+                } else {
+                    this.btnEnzyme.classList.add('disabled');
+                }
             }
         } else {
             toggle.classList.add('hidden');
@@ -302,6 +308,9 @@ ADEPT.Input.prototype.handleCanvasTouch = function(vx, vy) {
                 this.anyKey = true;
             } else if (this.hitTest(vx, vy, z.menuCard2)) {
                 this.selectedOption = 2;
+                this.anyKey = true;
+            } else if (this.hitTest(vx, vy, z.menuCard3)) {
+                this.selectedOption = 3;
                 this.anyKey = true;
             } else if (this.hitTest(vx, vy, z.menuHelp)) {
                 this.selectedOption = 14;
