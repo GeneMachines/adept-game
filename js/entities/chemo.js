@@ -18,11 +18,13 @@ ADEPT.Chemo.prototype.onCollision = function(other) {
         other.damage(this.potency * B.chemo_tumor_mult);
         this.alive = false;
         if (ADEPT.Particles) ADEPT.Particles.spawn('damage', this.x, this.y);
+        if (ADEPT.Sound) ADEPT.Sound.play('tumorHit');
     }
     if (other.type === 'cuttlefish') {
         other.damage(this.potency * B.chemo_cuttlefish_mult);
         this.alive = false;
         if (ADEPT.Particles) ADEPT.Particles.spawn('damage', this.x, this.y);
+        if (ADEPT.Sound) ADEPT.Sound.play('cuttlefishHit');
     }
 };
 

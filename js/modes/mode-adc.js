@@ -23,6 +23,7 @@ ADEPT.ModeADC.prototype.update = function(dt, game) {
             this.onDoseRelease(charge, game);
             this.dosesUsed++;
             this.dosed = true;
+            if (ADEPT.Sound) ADEPT.Sound.play('deploy');
         }
     }
 };

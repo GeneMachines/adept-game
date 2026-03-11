@@ -17,6 +17,7 @@ ADEPT.ADC.prototype.onCollision = function(other) {
     if (other.type === 'tumor' && Math.random() < ADEPT.Balance.adc_tumor_bind) {
         this.bindTo(other);
         other.addBoundMolecule(this);
+        if (ADEPT.Sound) ADEPT.Sound.play('bind');
     }
 };
 

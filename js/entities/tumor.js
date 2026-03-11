@@ -103,6 +103,7 @@ ADEPT.Tumor.prototype.startMetBeam = function(targetX, targetY) {
         impactDuration: 0.2,
         chargeSpawnTimer: 0,
     };
+    if (ADEPT.Sound) ADEPT.Sound.play('metCharge');
 };
 
 ADEPT.Tumor.prototype.update = function(dt) {
@@ -110,6 +111,7 @@ ADEPT.Tumor.prototype.update = function(dt) {
     if (this.damageFlash > 0) this.damageFlash -= dt;
     if (this.hp <= 0 && this.alive) {
         this.alive = false;
+        if (ADEPT.Sound) ADEPT.Sound.play('tumorDeath');
         if (this.isMetastasis && ADEPT.Particles) {
             ADEPT.Particles.spawn('death', this.x, this.y);
         }
@@ -129,6 +131,7 @@ ADEPT.Tumor.prototype.update = function(dt) {
             if (b.timer >= b.chargeDuration) {
                 b.phase = 'beam';
                 b.timer = 0;
+                if (ADEPT.Sound) ADEPT.Sound.play('metBeam');
             }
         } else if (b.phase === 'beam') {
             b.progress = Math.min(1, b.timer / b.beamDuration);
@@ -136,6 +139,7 @@ ADEPT.Tumor.prototype.update = function(dt) {
                 b.phase = 'impact';
                 b.timer = 0;
                 ADEPT.Particles.spawn('met_impact', b.targetX, b.targetY);
+                if (ADEPT.Sound) ADEPT.Sound.play('metImpact');
             }
         } else if (b.phase === 'impact') {
             if (b.timer >= b.impactDuration) {

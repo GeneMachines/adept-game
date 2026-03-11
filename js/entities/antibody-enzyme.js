@@ -18,6 +18,7 @@ ADEPT.AntibodyEnzyme.prototype.onCollision = function(other) {
     if (other.type === 'tumor' && Math.random() < ADEPT.Balance.ae_tumor_bind) {
         this.bindTo(other);
         other.addBoundMolecule(this);
+        if (ADEPT.Sound) ADEPT.Sound.play('bind');
     }
 };
 

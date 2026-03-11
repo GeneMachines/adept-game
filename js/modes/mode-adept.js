@@ -27,6 +27,7 @@ ADEPT.ModeADEPT.prototype.update = function(dt, game) {
         if (game.input.consumeProdrugToggle() && this.aeDoses > 0) {
             // Toggle back to prodrug mode
             this.phase = 2;
+            if (ADEPT.Sound) ADEPT.Sound.play('phaseToggle');
         } else if (game.input.chargeReleased) {
             var charge = game.input.consumeCharge();
             if (charge > 0.05) {
@@ -34,6 +35,7 @@ ADEPT.ModeADEPT.prototype.update = function(dt, game) {
                 this.dosesUsed++;
                 this.aeDoses++;
                 this.dosed = true;
+                if (ADEPT.Sound) ADEPT.Sound.play('deploy');
                 // After first dose, switch to phase 2 (but can still deploy more AE via toggle)
                 this.phase = 2;
             }
@@ -44,12 +46,14 @@ ADEPT.ModeADEPT.prototype.update = function(dt, game) {
         if (game.input.consumePhase2() && this.aeDoses < this.maxAEDoses) {
             // Toggle to enzyme mode for another AB-enzyme dose
             this.phase = 1;
+            if (ADEPT.Sound) ADEPT.Sound.play('phaseToggle');
         } else if (game.input.chargeReleased) {
             var charge = game.input.consumeCharge();
             if (charge > 0.05) {
                 this.deployProdrug(charge, game);
                 this.dosesUsed++;
                 this.phase = 4;
+                if (ADEPT.Sound) ADEPT.Sound.play('deploy');
             }
         }
     } else if (this.phase === 4) {
@@ -61,6 +65,7 @@ ADEPT.ModeADEPT.prototype.update = function(dt, game) {
             if (charge > 0.05) {
                 this.deployProdrug(charge, game);
                 this.dosesUsed++;
+                if (ADEPT.Sound) ADEPT.Sound.play('deploy');
             }
         }
     }

@@ -48,6 +48,7 @@ ADEPT.Prodrug.prototype.activate = function(enzyme) {
         ADEPT.gameInstance.addEntity(drug);
     }
     if (ADEPT.Particles) ADEPT.Particles.spawn('activation', enzyme.x, enzyme.y);
+    if (ADEPT.Sound) ADEPT.Sound.play('activation');
 };
 
 ADEPT.Prodrug.prototype.render = function(ctx) {

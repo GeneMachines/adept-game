@@ -97,6 +97,7 @@ ADEPT.Game.prototype.update = function(dt) {
             }
             var opt = this.input.consumeOption();
             if (opt === 0 || opt === 1 || opt === 2) {
+                if (ADEPT.Sound) ADEPT.Sound.play('menuSelect');
                 this.startMode(opt, 1); // Skip stage select, go straight to Stage I
             } else if (opt === 14) { // I - info
                 this.state = 'HOW_TO_PLAY';
@@ -196,6 +197,7 @@ ADEPT.Game.prototype.update = function(dt) {
                 var e = this.entities[i];
                 if (e.type === 'cuttlefish' && e.hp <= 0 && e.deathTimer < 0.05) {
                     ADEPT.Particles.spawn('death', e.x, e.y);
+                    if (ADEPT.Sound) ADEPT.Sound.play('cuttlefishDeath');
                 }
             }
             break;
@@ -396,9 +398,11 @@ ADEPT.Game.prototype.saveProgress = function(modeIndex, stage, tumorKilled) {
 ADEPT.Game.prototype.startGameOver = function() {
     this.gameOverTimer = 0;
     this.state = 'GAME_OVER';
+    if (ADEPT.Sound) ADEPT.Sound.play('gameOver');
 };
 
 ADEPT.Game.prototype.endRound = function(tumorKilled) {
+    if (tumorKilled && ADEPT.Sound) ADEPT.Sound.play('victory');
     var alive = this.getCuttlefishAlive();
     var total = this.getCuttlefishTotal();
     this.result = ADEPT.Scoring.calculate(

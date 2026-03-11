@@ -9,6 +9,7 @@ window.ADEPT = window.ADEPT || {};
 
     // Preload sprites
     if (ADEPT.Sprites) ADEPT.Sprites.init();
+    if (ADEPT.Sound) ADEPT.Sound.init();
 
     var game = new ADEPT.Game(canvas);
     game.start();

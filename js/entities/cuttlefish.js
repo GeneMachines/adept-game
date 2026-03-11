@@ -120,6 +120,7 @@ ADEPT.Cuttlefish.prototype.updatePinocytosis = function(dt) {
         // Internalized! Molecule is consumed
         e.alive = false;
         if (ADEPT.Particles) ADEPT.Particles.spawn('uptake', e.x, e.y);
+        if (ADEPT.Sound) ADEPT.Sound.play('uptake');
 
         if (e.type === 'adc') {
             // ADC carries cytotoxic payload — releases inside the cell
