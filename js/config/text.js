@@ -71,10 +71,11 @@ ADEPT.Text = {
             { text: 'A TARGETED STRIKE.', color: '#e0e040' },
         ],
         adept: [
-            'THE ADC STILL CAUSED DAMAGE.',
-            'WHAT IF TARGETING AND PAYLOAD',
-            'WERE SEPARATED?',
-            { text: 'MARK FIRST. THEN STRIKE.', color: '#e0e040' },
+            'ADEPT IS A TWO-PART STRATEGY.',
+            { text: '1/ PRIME THE COT', color: '#e0e040' },
+            '(DON\'T WORRY, IT WON\'T HURT',
+            'YOUR FRIENDS)',
+            { text: '2/ LET THE PRODRUG RIP!', color: '#e0e040' },
         ],
         boss: [
             'THE INVASION HAS BEEN PUSHED BACK.',
